@@ -44,6 +44,8 @@ void initHikeWatch()
     // Pop-up messages
     // Tumbling
 
+    // hi sophia
+
     // Side button
     pinMode(AXP202_INT, INPUT_PULLUP);
     attachInterrupt(AXP202_INT, [] {
