@@ -34,7 +34,7 @@ void initHikeWatch()
         Serial.println("LITTLEFS Mount Failed");
         return;
     }
-
+    
     // Stepcounter
     // Configure IMU
     // Enable BMA423 step count feature
