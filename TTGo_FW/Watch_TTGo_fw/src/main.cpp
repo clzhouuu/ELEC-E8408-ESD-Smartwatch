@@ -40,6 +40,9 @@ void initHikeWatch()
     // Enable BMA423 step count feature
     // Reset steps
     // Turn on step interrupt
+    
+    // Pop-up messages
+    // Tumbling
 
     // Side button
     pinMode(AXP202_INT, INPUT_PULLUP);
