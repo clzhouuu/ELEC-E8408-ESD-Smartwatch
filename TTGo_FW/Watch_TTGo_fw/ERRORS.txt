@@ -1,0 +1,7 @@
+Update platform: platform = espressif32@6.8.1
+Shorter folder path
+
+pio run
+pio run -t cleanall
+pio run -t compiledb
+pio run -t upload

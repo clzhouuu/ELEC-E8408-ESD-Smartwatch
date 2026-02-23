@@ -1,0 +1,13 @@
+Building code: 
+'pio run' in the terminal 
+OR
+'build' in the general folder in platform
+
+ERROR 
+
+update espressif
+delete from .platformio espress if files and underneath
+pio run -t cleanall
+
+pio run -t upload
+pio run -t compiledb
