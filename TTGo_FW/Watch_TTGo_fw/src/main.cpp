@@ -14,6 +14,10 @@ TTGOClass *watch;
 TFT_eSPI *tft;
 BMA *sensor;
 
+// Global variables for batteryState
+int batteryPercent = 0;
+unsigned long batteryTimer = 0;
+
 uint32_t sessionId = 30;
 
 unsigned long last = 0;
@@ -25,7 +29,7 @@ volatile bool irqBMA = false;
 volatile bool irqButton = false;
 
 // input variables
-float height = 165;
+float height = 0.00165;
 float weight = 0.0f;
 
 // distance calculation variables
@@ -338,6 +342,25 @@ void loop()
                     watch->tft->print(distance_m / 1000.0f, 2);
                     watch->tft->print(" km");
                 }
+
+                if (millis() - batteryTimer > 5000);{
+                batteryTimer = millis();
+                batteryPercent = watch->power->getBattPercentage();
+                
+                    //If low battery
+                    if (batteryPercent < 20) {
+                        watch->tft->setCursor(40, 200);
+                        watch->tft->setTextColor(TFT_RED, TFT_BLACK);
+                        watch->tft->printf("LOW BATTERY!");
+                        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
+                    }
+                
+                }
+
+                // Display Battery %
+                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
+                watch->tft->setCursor(45, 130);
+                watch->tft->printf("Battery: %d", batteryPercent, "%");
             }
 
             // --- Button interrupt to end hike ---
