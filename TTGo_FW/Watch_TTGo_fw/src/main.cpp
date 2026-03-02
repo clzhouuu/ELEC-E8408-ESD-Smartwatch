@@ -16,6 +16,10 @@ BMA *sensor;
 
 uint32_t sessionId = 30;
 
+// Global variables for stepcount
+uint32_t currentSteps = 0;
+bool hikeActive = false;
+
 unsigned long last = 0;
 unsigned long updateTimeout = 0;
 
@@ -37,8 +41,11 @@ void initHikeWatch()
     
     // Stepcounter
     // Configure IMU
-    // Enable BMA423 step count feature
+    // Enable BMA423 step count feature (the hardware embedded in the Watch)
+    sensor->begin();
+    sensor->enableFeature(BMA423_STEP_CNTR, true);
     // Reset steps
+    sensor->resetStepCounter();
     // Turn on step interrupt
     
     // Pop-up messages
@@ -241,13 +248,21 @@ void loop()
     {
         /* Hiking session initalisation */
         
+        //reset stepcounter at the start of hike
+        sensor->resetStepCounter();
+        hikeActive = true;
         state = 3;
+
         break;
     }
     case 3:
     {
         /* Hiking session ongoing */
 
+        if (!hikeActive) break;
+
+        // OG code
+        /*
         watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
         watch->tft->drawString("Starting hike", 45, 100);
         delay(1000);
@@ -261,14 +276,39 @@ void loop()
 
         last = millis();
         updateTimeout = 0;
+        */
 
-        //reset step-counter
+        
+        // New code - Update display every 1 second
+        if (millis() - last > 1000) {
+            last = millis();
+            
+            currentSteps = sensor->getCounter(); // read step count
+            // Clear screen area
+            watch->tft->fillScreen(TFT_BLACK);
+
+            watch->tft->setCursor(40, 80);
+            watch->tft->setTextSize(2);
+            watch->tft->print("Steps:");
+
+            watch->tft->setCursor(40, 110);
+            watch->tft->setTextSize(3);
+
+            watch->tft->printf("Steps: %d", currentSteps);
+
+
+        }
+        break;
     }
     case 4:
     {
         //Save hiking session data
         delay(1000);
         state = 1;  
+        
+        uint32_t finalSteps = sensor->getCounter();
+        saveStepsToFile(finalSteps);
+
         break;
     }
     default:
