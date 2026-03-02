@@ -44,15 +44,29 @@ void initHikeWatch()
         return;
     }
     
-    // Stepcounter
+    // ------Stepcounter---------
     // Configure IMU
+    Acfg cfg;
+    cfg.odr = BMA4_OUTPUT_DATA_RATE_100HZ;
+    cfg.range = BMA4_ACCEL_RANGE_2G;
+    cfg.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
+    cfg.perf_mode = BMA4_CONTINUOUS_MODE;
+    sensor->accelConfig(cfg);
+    sensor->enableAccel();
     // Enable BMA423 step count feature (the hardware embedded in the Watch)
     sensor->begin();
     sensor->enableFeature(BMA423_STEP_CNTR, true);
     // Reset steps
     sensor->resetStepCounter();
     // Turn on step interrupt
-    
+    sensor->enableStepCountInterrupt();
+
+    // BMA interupt
+    pinMode(BMA423_INT1, INPUT);
+    attachInterrupt(BMA423_INT1, [] { 
+        irqBMA = true; 
+    }, RISING);
+
     // Pop-up messages
     // Tumbling
 
