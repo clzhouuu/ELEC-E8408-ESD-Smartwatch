@@ -24,6 +24,16 @@ volatile uint8_t state;
 volatile bool irqBMA = false;
 volatile bool irqButton = false;
 
+// input variables
+float height = 165;
+float weight = 0.0f;
+
+// distance calculation variables
+uint32_t steps = 0;
+uint32_t lastStep = 0;
+float distance_m = 0.0f;
+const float stride = 0.43 * height;
+
 bool sessionStored = false;
 bool sessionSent = false;
 
@@ -37,10 +47,44 @@ void initHikeWatch()
     
     // Stepcounter
     // Configure IMU
+    Acfg cfg;
+    cfg.odr = BMA4_OUTPUT_DATA_RATE_100HZ;
+    cfg.range = BMA4_ACCEL_RANGE_2G;
+    cfg.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
+    cfg.perf_mode = BMA4_CONTINUOUS_MODE;
+
+    sensor->accelConfig(cfg);
+    sensor->enableAccel(); 
+
     // Enable BMA423 step count feature
+    sensor->enableFeature(BMA423_STEP_CNTR, true);
+
     // Reset steps
+    sensor->resetStepCounter();
+
     // Turn on step interrupt
-    
+    sensor->enableStepCountInterrupt();
+
+    // BMA interupt
+    pinMode(BMA423_INT1, INPUT);
+    attachInterrupt(BMA423_INT1, [] { 
+        irqBMA = true; 
+    }, RISING);
+
+
+    // GPS
+    // Configure IMU
+
+    // Enable BMA423 step count feature
+
+    // Reset steps
+
+    // Turn on step interrupt
+
+    // BMA interupt
+
+
+
     // Pop-up messages
     // Tumbling
 
@@ -157,6 +201,8 @@ void loop()
         watch->tft->drawString("Press button", 50, 80);
         watch->tft->drawString("to start session", 40, 110);
 
+        // variable initiation
+
         bool exitSync = false;
 
         //Bluetooth discovery
@@ -254,15 +300,55 @@ void loop()
         watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
 
         watch->tft->setCursor(45, 70);
-        watch->tft->print("Steps: 0");
+        watch->tft->print("Steps: ");
 
         watch->tft->setCursor(45, 100);
-        watch->tft->print("Dist: 0 km");
+        watch->tft->print("Dist: ");
 
         last = millis();
         updateTimeout = 0;
 
         //reset step-counter
+        sensor->resetStepCounter();
+        lastStep = 0;
+        distance_m  = 0.0f;
+
+        uint32_t currentSteps = 0;
+
+        // loop
+        while (state == 3){
+            if (irqBMA){
+                irqBMA = false;
+
+                sensor->readInterrupt();
+                if (sensor->isStepCounter()){
+                    currentSteps = sensor->getCounter();
+
+                    uint32_t delta = currentSteps - lastStep;
+                    lastStep = currentSteps;
+
+                    distance_m += delta * stride;  
+
+                    watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
+                    watch->tft->setCursor(120, 70);
+                    watch->tft->print(currentSteps);
+
+                    watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
+                    watch->tft->setCursor(120, 100);
+                    watch->tft->print(distance_m / 1000.0f, 2);
+                    watch->tft->print(" km");
+                }
+            }
+
+            // --- Button interrupt to end hike ---
+            if (irqButton)
+            {
+                irqButton = false;
+                state = 4;
+            }
+        }
+        break;      
+
     }
     case 4:
     {
