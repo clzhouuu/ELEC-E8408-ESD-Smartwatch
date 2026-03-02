@@ -20,6 +20,11 @@ uint32_t sessionId = 30;
 uint32_t currentSteps = 0;
 bool hikeActive = false;
 
+// Global variables for batteryState
+int batteryPercent = 0;
+unsigned long batteryTimer = 0;
+
+
 unsigned long last = 0;
 unsigned long updateTimeout = 0;
 
@@ -284,18 +289,36 @@ void loop()
             last = millis();
             
             currentSteps = sensor->getCounter(); // read step count
+
+            // Update battery % every 5 seconds
+            if (millis() - batteryTimer > 5000);{
+                batteryTimer = millis();
+                batteryPercent = watch->power->getBattPercentage();
+                
+                //If low battery
+                if (batteryPercent < 20) {
+                    watch->tft->setCursor(40, 200);
+                    watch->tft->setTextColor(TFT_RED, TFT_BLACK);
+                    watch->tft->printf("LOW BATTERY!");
+                    watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
+                }
+            }
             // Clear screen area
             watch->tft->fillScreen(TFT_BLACK);
-
+            
+            // Display step count
             watch->tft->setCursor(40, 80);
             watch->tft->setTextSize(2);
             watch->tft->print("Steps:");
-
             watch->tft->setCursor(40, 110);
             watch->tft->setTextSize(3);
-
             watch->tft->printf("Steps: %d", currentSteps);
 
+            // Display Battery %
+            watch->tft->setCursor(40, 160);
+            watch->tft->setTextSize(2);
+            watch->tft->printf("Battery: %d", batteryPercent, "%");
+     
 
         }
         break;
