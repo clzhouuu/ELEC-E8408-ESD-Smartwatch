@@ -1,5 +1,5 @@
 import sqlite3
-
+from typing import List
 import hike
 import threading
 
@@ -39,7 +39,7 @@ class HubDatabase:
         self.con = sqlite3.connect(DB_FILE_NAME, check_same_thread=False)
         self.cur = self.con.cursor()
 
-        for t in (DB_SESSION_TABLE):
+        for t in (DB_SESSION_TABLE,):
             create_table_sql = f"create table if not exists {t['name']} ({', '.join(t['cols'])})"
             self.cur.execute(create_table_sql)
 
@@ -75,7 +75,7 @@ class HubDatabase:
         finally:
             self.lock.release()
 
-    def get_sessions(self) -> list[hike.HikeSession]:
+    def get_sessions(self) -> List[hike.HikeSession]:
         try:
             self.lock.acquire()
             rows = self.cur.execute(f"SELECT * FROM {DB_SESSION_TABLE['name']}").fetchall()

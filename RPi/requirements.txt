@@ -1,4 +1,8 @@
 pybluez==0.23
-flask==1.1.2
+flask==1.1.4
+jinja2==2.11.3
+itsdangerous==1.1.0
+markupsafe==1.1.1
+werkzeug==1.0.1
 pillow==8.1.2
 # unicornhathd=0.0.4 # you need to install this as sudo
