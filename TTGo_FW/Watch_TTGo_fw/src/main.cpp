@@ -13,6 +13,7 @@ BluetoothSerial SerialBT;
 TTGOClass *watch;
 TFT_eSPI *tft;
 BMA *sensor;
+PCF8563_Class *rtc;
 
 // Global variables for batteryState
 int batteryPercent = 0;
@@ -76,16 +77,9 @@ void initHikeWatch()
     }, RISING);
 
 
-    // GPS
-    // Configure IMU
-
-    // Enable BMA423 step count feature
-
-    // Reset steps
-
-    // Turn on step interrupt
-
-    // BMA interupt
+    // Timer
+    
+    
 
 
 
@@ -182,6 +176,10 @@ void setup()
     //Receive objects for easy writing
     tft = watch->tft;
     sensor = watch->bma;
+    rtc = watch->rtc;
+    rtc -> check();
+
+    
     
     initHikeWatch();
 
@@ -190,8 +188,24 @@ void setup()
     SerialBT.begin("Hiking Watch");
 }
 
+// for clock ticks
+void drawClock()
+{
+    static unsigned long lastClockUpdate = 0;
+
+    if (millis() - lastClockUpdate > 1000) {
+        lastClockUpdate = millis();
+
+        watch->tft->fillRect(170, 5, 70, 20, TFT_BLACK);  // clear area
+        watch->tft->drawString(rtc->formatDateTime(PCF_TIMEFORMAT_HM), 170, 5);
+    }
+}
+
+
+
 void loop()
 {
+    drawClock();
     switch (state)
     {
     case 1:
@@ -204,6 +218,8 @@ void loop()
         watch->tft->drawString("Hiking Watch",  45, 25, 4);
         watch->tft->drawString("Press button", 50, 80);
         watch->tft->drawString("to start session", 40, 110);
+        
+        rtc -> formatDateTime(PCF_TIMEFORMAT_HM);
 
         // variable initiation
 
@@ -319,43 +335,50 @@ void loop()
 
         uint32_t currentSteps = 0;
 
-        // loop
-        while (state == 3){
-            if (irqBMA){
-                irqBMA = false;
+        if (irqBMA){
+            irqBMA = false;
 
-                sensor->readInterrupt();
-                if (sensor->isStepCounter()){
-                    currentSteps = sensor->getCounter();
+            sensor->readInterrupt();
+            if (sensor->isStepCounter()){
+                currentSteps = sensor->getCounter();
 
-                    uint32_t delta = currentSteps - lastStep;
-                    lastStep = currentSteps;
+                uint32_t delta = currentSteps - lastStep;
+                lastStep = currentSteps;
 
-                    distance_m += delta * stride;  
+                distance_m += delta * stride;  
 
-                    watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
-                    watch->tft->setCursor(120, 70);
-                    watch->tft->print(currentSteps);
+                watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
+                watch->tft->setCursor(120, 70);
+                watch->tft->print(currentSteps);
 
-                    watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
-                    watch->tft->setCursor(120, 100);
-                    watch->tft->print(distance_m / 1000.0f, 2);
-                    watch->tft->print(" km");
+                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
+                watch->tft->setCursor(120, 100);
+                watch->tft->print(distance_m / 1000.0f, 2);
+                watch->tft->print(" km");
+            } else {
+                watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
+                watch->tft->setCursor(120, 70);
+                watch->tft->print(0);
+
+                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
+                watch->tft->setCursor(120, 100);
+                watch->tft->print(0);
+                watch->tft->print(" km");   
+            }
+
+            if (millis() - batteryTimer > 5000);{
+            batteryTimer = millis();
+            batteryPercent = watch->power->getBattPercentage();
+            
+                //If low battery
+                if (batteryPercent < 20) {
+                    watch->tft->setCursor(40, 200);
+                    watch->tft->setTextColor(TFT_RED, TFT_BLACK);
+                    watch->tft->printf("LOW BATTERY!");
+                    watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
                 }
-
-                if (millis() - batteryTimer > 5000);{
-                batteryTimer = millis();
-                batteryPercent = watch->power->getBattPercentage();
-                
-                    //If low battery
-                    if (batteryPercent < 20) {
-                        watch->tft->setCursor(40, 200);
-                        watch->tft->setTextColor(TFT_RED, TFT_BLACK);
-                        watch->tft->printf("LOW BATTERY!");
-                        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-                    }
-                
-                }
+            
+            } 
 
                 // Display Battery %
                 watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
