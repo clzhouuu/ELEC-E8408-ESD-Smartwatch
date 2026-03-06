@@ -210,82 +210,84 @@ void loop()
         bool exitSync = false;
 
         //Bluetooth discovery
-        while (1)
-        {
-            /* Bluetooth sync */
-            if (SerialBT.available())
-            {
-                char incomingChar = SerialBT.read();
-                if (incomingChar == 'c' and sessionStored and not sessionSent)
-                {
-                    sendSessionBT();
-                    sessionSent = true;
-                }
+        
+        // while (1)
+        // {
+        //     /* Bluetooth sync */
+        //     if (SerialBT.available())
+        //     {
+        //         char incomingChar = SerialBT.read();
+        //         if (incomingChar == 'c' and sessionStored and not sessionSent)
+        //         {
+        //             sendSessionBT();
+        //             sessionSent = true;
+        //         }
 
-                if (sessionSent && sessionStored) {
-                    // Update timeout before blocking while
-                    updateTimeout = 0;
-                    last = millis();
-                    while(1)
-                    {
-                        updateTimeout = millis();
+        //         if (sessionSent && sessionStored) {
+        //             // Update timeout before blocking while
+        //             updateTimeout = 0;
+        //             last = millis();
+        //             while(1)
+        //             {
+        //                 updateTimeout = millis();
 
-                        if (SerialBT.available())
-                            incomingChar = SerialBT.read();
-                        if (incomingChar == 'r')
-                        {
-                            Serial.println("Got an R");
-                            // Delete session
-                            deleteSession();
-                            sessionStored = false;
-                            sessionSent = false;
-                            incomingChar = 'q';
-                            exitSync = true;
-                            break;
-                        }
-                        else if ((millis() - updateTimeout > 2000))
-                        {
-                            Serial.println("Waiting for timeout to expire");
-                            updateTimeout = millis();
-                            sessionSent = false;
-                            exitSync = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (exitSync)
-            {
-                delay(1000);
-                watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-                watch->tft->drawString("Hiking Watch",  45, 25, 4);
-                watch->tft->drawString("Press button", 50, 80);
-                watch->tft->drawString("to start session", 40, 110);
-                exitSync = false;
-            }
+        //                 if (SerialBT.available())
+        //                     incomingChar = SerialBT.read();
+        //                 if (incomingChar == 'r')
+        //                 {
+        //                     Serial.println("Got an R");
+        //                     // Delete session
+        //                     deleteSession();
+        //                     sessionStored = false;
+        //                     sessionSent = false;
+        //                     incomingChar = 'q';
+        //                     exitSync = true;
+        //                     break;
+        //                 }
+        //                 else if ((millis() - updateTimeout > 2000))
+        //                 {
+        //                     Serial.println("Waiting for timeout to expire");
+        //                     updateTimeout = millis();
+        //                     sessionSent = false;
+        //                     exitSync = true;
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     if (exitSync)
+        //     {
+        //         delay(1000);
+        //         watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+        //         watch->tft->drawString("Hiking Watch",  45, 25, 4);
+        //         watch->tft->drawString("Press button", 50, 80);
+        //         watch->tft->drawString("to start session", 40, 110);
+        //         exitSync = false;
+        //     }
 
-            /*      IRQ     */
-            if (irqButton) {
-                irqButton = false;
-                watch->power->readIRQ();
-                if (state == 1)
-                {
-                    state = 2;
-                }
-                watch->power->clearIRQ();
-            }
-            if (state == 2) {
-                if (sessionStored)
-                {
-                    watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-                    watch->tft->drawString("Overwriting",  55, 100, 4);
-                    watch->tft->drawString("session", 70, 130);
-                    delay(1000);
-                }
-                break;
-            }
-        }
-        break;
+        //     /*      IRQ     */
+        //     if (irqButton) {
+        //         irqButton = false;
+        //         watch->power->readIRQ();
+        //         if (state == 1)
+        //         {
+        //             state = 2;
+        //         }
+        //         watch->power->clearIRQ();
+        //     }
+        //     if (state == 2) {
+        //         if (sessionStored)
+        //         {
+        //             watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+        //             watch->tft->drawString("Overwriting",  55, 100, 4);
+        //             watch->tft->drawString("session", 70, 130);
+        //             delay(1000);
+        //         }
+        //         break;
+        //     }
+        // }
+        // break;
+        
     }
     case 2:
     {
@@ -300,14 +302,17 @@ void loop()
 
         watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
         watch->tft->drawString("Starting hike", 45, 100);
-        delay(1000);
+        delay(2000);
         watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
 
-        watch->tft->setCursor(45, 70);
+        watch->tft->setCursor(40, 70);
         watch->tft->print("Steps: ");
 
-        watch->tft->setCursor(45, 100);
+        watch->tft->setCursor(40, 100);
         watch->tft->print("Dist: ");
+
+        watch->tft->setCursor(40, 130);
+        watch->tft->print("Battery: ");
 
         last = millis();
         updateTimeout = 0;
@@ -334,18 +339,23 @@ void loop()
                     distance_m += delta * stride;  
 
                     watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
-                    watch->tft->setCursor(120, 70);
+                    watch->tft->setCursor(130, 70);
                     watch->tft->print(currentSteps);
 
                     watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
-                    watch->tft->setCursor(120, 100);
+                    watch->tft->setCursor(130, 100);
                     watch->tft->print(distance_m / 1000.0f, 2);
                     watch->tft->print(" km");
                 }
 
-                if (millis() - batteryTimer > 5000);{
-                batteryTimer = millis();
-                batteryPercent = watch->power->getBattPercentage();
+                if (millis() - batteryTimer > 5000){
+                    batteryTimer = millis();
+                    batteryPercent = watch->power->getBattPercentage();
+
+                    // Display Battery %
+                    watch->tft->fillRect(120, 130, 100, 20, TFT_BLACK);
+                    watch->tft->setCursor(130, 130);
+                    watch->tft->printf("%d%%", batteryPercent);
                 
                     //If low battery
                     if (batteryPercent < 20) {
@@ -357,10 +367,6 @@ void loop()
                 
                 }
 
-                // Display Battery %
-                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
-                watch->tft->setCursor(45, 130);
-                watch->tft->printf("Battery: %d", batteryPercent, "%");
             }
 
             // --- Button interrupt to end hike ---
