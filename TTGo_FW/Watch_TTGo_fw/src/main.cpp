@@ -30,14 +30,28 @@ volatile bool irqBMA = false;
 volatile bool irqButton = false;
 
 // input variables
-float height = 0.00165;
-float weight = 0.0f;
+float height = 1.65;
+float weight = 50.0f;
 
 // distance calculation variables
 uint32_t steps = 0;
 uint32_t lastStep = 0;
+uint32_t currentSteps = 0;
+
 float distance_m = 0.0f;
 const float stride = 0.43 * height;
+
+// time variables
+String sessionStartDate = "";
+String sessionStartTime = "";
+String sessionEndTime = "";
+
+unsigned long sessionStartMs = 0;
+unsigned long sessionDurationMs = 0;
+
+// calorie estimation variables
+uint32_t MET = 6;
+uint32_t caloriesBurned = 0;
 
 bool sessionStored = false;
 bool sessionSent = false;
@@ -76,17 +90,10 @@ void initHikeWatch()
         irqBMA = true; 
     }, RISING);
 
-
-    // Timer
-    
-    
-
-
+    // GPS
 
     // Pop-up messages
     // Tumbling
-
-    // hi sophia
 
     // Side button
     pinMode(AXP202_INT, INPUT_PULLUP);
@@ -177,9 +184,9 @@ void setup()
     tft = watch->tft;
     sensor = watch->bma;
     rtc = watch->rtc;
+
     rtc -> check();
 
-    
     
     initHikeWatch();
 
@@ -188,28 +195,27 @@ void setup()
     SerialBT.begin("Hiking Watch");
 }
 
-// for clock ticks
-void drawClock()
-{
-    static unsigned long lastClockUpdate = 0;
+void drawTime(){
+    static unsigned long lastUpdate = 0;
 
-    if (millis() - lastClockUpdate > 1000) {
-        lastClockUpdate = millis();
+    if (millis() - lastUpdate > 1000) {
+        lastUpdate = millis();
 
-        watch->tft->fillRect(170, 5, 70, 20, TFT_BLACK);  // clear area
+        watch->tft->fillRect(170, 5, 70, 20, TFT_BLACK); 
         watch->tft->drawString(rtc->formatDateTime(PCF_TIMEFORMAT_HM), 170, 5);
     }
 }
 
 
-
 void loop()
 {
-    drawClock();
+    drawTime();
+    
     switch (state)
     {
     case 1:
     {
+        drawTime();
         /* Initial stage */
         //Basic interface
         watch->tft->fillScreen(TFT_BLACK);
@@ -218,14 +224,13 @@ void loop()
         watch->tft->drawString("Hiking Watch",  45, 25, 4);
         watch->tft->drawString("Press button", 50, 80);
         watch->tft->drawString("to start session", 40, 110);
-        
-        rtc -> formatDateTime(PCF_TIMEFORMAT_HM);
 
         // variable initiation
 
         bool exitSync = false;
 
-        //Bluetooth discovery
+        // Bluetooth discovery
+        
         while (1)
         {
             /* Bluetooth sync */
@@ -301,11 +306,12 @@ void loop()
                 break;
             }
         }
-        break;
+        break;  
     }
     case 2:
     {
         /* Hiking session initalisation */
+        drawTime();
         
         state = 3;
         break;
@@ -313,84 +319,126 @@ void loop()
     case 3:
     {
         /* Hiking session ongoing */
+        drawTime();
+        sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
+        sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
+        sessionStartMs = millis();
 
-        watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-        watch->tft->drawString("Starting hike", 45, 100);
-        delay(1000);
-        watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+        watch->tft->fillScreen(TFT_BLACK);
+        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
+        watch->tft->setTextFont(2); 
 
-        watch->tft->setCursor(45, 70);
-        watch->tft->print("Steps: ");
+        watch->tft->drawString("Starting hike", 55, 100, 2);
+        delay(2000);
+        watch->tft->fillScreen(TFT_BLACK);
 
-        watch->tft->setCursor(45, 100);
-        watch->tft->print("Dist: ");
-
-        last = millis();
-        updateTimeout = 0;
+        // Initial display
+        watch->tft->drawString("Steps:",    20, 50, 2);
+        watch->tft->drawString("Dist:",     20, 80, 2);
+        watch->tft->drawString("Calories:", 20, 110, 2);
+        watch->tft->drawString("Duration:", 20, 140, 2);
+        watch->tft->drawString("Battery:",  20, 170, 2);
 
         //reset step-counter
         sensor->resetStepCounter();
         lastStep = 0;
         distance_m  = 0.0f;
+        currentSteps = 0;
+        last = millis();
+        updateTimeout = 0;
 
-        uint32_t currentSteps = 0;
+        watch->tft->drawString("0",      130, 50, 2);
+        watch->tft->drawString("0.00 km",130, 80, 2);
+        watch->tft->drawString("0 kcal",130, 110, 2);
+        watch->tft->drawString("00:00:00", 130, 140, 2);
+        watch->tft->drawString("0 %", 130, 170, 2);
 
-        if (irqBMA){
-            irqBMA = false;
+        // loop
+        while (state == 3){
 
-            sensor->readInterrupt();
-            if (sensor->isStepCounter()){
-                currentSteps = sensor->getCounter();
+            // time display
+            drawTime();
+        
+            static unsigned long lastDurationUpdate = 0;
 
-                uint32_t delta = currentSteps - lastStep;
-                lastStep = currentSteps;
+            if (millis() - lastDurationUpdate > 1000) {
+                lastDurationUpdate = millis();
+                sessionDurationMs = millis() - sessionStartMs;
 
-                distance_m += delta * stride;  
+                unsigned long totalSeconds = sessionDurationMs / 1000;
+                unsigned long seconds = totalSeconds % 60;
+                unsigned long minutes = (totalSeconds % 3600) / 60;
+                unsigned long hours = totalSeconds / 3600;
 
-                watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
-                watch->tft->setCursor(120, 70);
-                watch->tft->print(currentSteps);
+                watch->tft->fillRect(130, 140, 90, 16, TFT_BLACK);
+                watch->tft->setCursor(130, 140);
 
-                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
-                watch->tft->setCursor(120, 100);
-                watch->tft->print(distance_m / 1000.0f, 2);
-                watch->tft->print(" km");
-            } else {
-                watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
-                watch->tft->setCursor(120, 70);
-                watch->tft->print(0);
+                if (hours < 10) watch->tft->print("0");
+                watch->tft->print(hours);
+                watch->tft->print(":");
 
-                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
-                watch->tft->setCursor(120, 100);
-                watch->tft->print(0);
-                watch->tft->print(" km");   
+                if (minutes < 10) watch->tft->print("0");
+                watch->tft->print(minutes);
+                watch->tft->print(":");
+
+                if (seconds < 10) watch->tft->print("0");
+                watch->tft->print(seconds);
             }
 
-            if (millis() - batteryTimer > 5000);{
-            batteryTimer = millis();
-            batteryPercent = watch->power->getBattPercentage();
+            if (irqBMA){
+                irqBMA = false;
+
+                sensor->readInterrupt();
+                if (sensor->isStepCounter()){
+                    // steps
+                    currentSteps = sensor->getCounter(); 
+                    uint32_t delta = currentSteps - lastStep;
+                    lastStep = currentSteps;
+
+                    // distance
+                    distance_m += delta * stride; 
+                    
+                    // calories
+                    caloriesBurned = (MET * weight * sessionDurationMs) / 3600000;
+
+                    watch->tft->fillRect(130, 50, 80, 16, TFT_BLACK);
+                    watch->tft->drawString(String(currentSteps), 130, 50, 2);
+
+                    watch->tft->fillRect(130, 80, 90, 16, TFT_BLACK);
+                    watch->tft->drawString(String(distance_m / 1000.0f, 2) + " km", 130, 80, 2);
+
+                    watch->tft->fillRect(130, 110, 90, 16, TFT_BLACK);
+                    watch->tft->drawString(String(caloriesBurned) + " kcal", 130, 110, 2);
+                }
+
+            }
+
+            if (millis() - batteryTimer > 5000){
+                batteryTimer = millis();
+                batteryPercent = watch->power->getBattPercentage();
+
+                // Display Battery %
+                watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
+                watch->tft->drawString(String(batteryPercent) + "%", 130, 170, 2);
             
                 //If low battery
                 if (batteryPercent < 20) {
-                    watch->tft->setCursor(40, 200);
                     watch->tft->setTextColor(TFT_RED, TFT_BLACK);
-                    watch->tft->printf("LOW BATTERY!");
+                    watch->tft->drawString("LOW BATTERY!", 40, 190, 2);
                     watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
+                } else {
+                    watch->tft->fillRect(40, 190, 140, 16, TFT_BLACK);
                 }
-            
-            } 
-
-                // Display Battery %
-                watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
-                watch->tft->setCursor(45, 130);
-                watch->tft->printf("Battery: %d", batteryPercent, "%");
             }
 
             // --- Button interrupt to end hike ---
             if (irqButton)
             {
+                sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                sessionDurationMs = millis() - sessionStartMs;
                 irqButton = false;
                 state = 4;
+                
             }
         }
         break;      
