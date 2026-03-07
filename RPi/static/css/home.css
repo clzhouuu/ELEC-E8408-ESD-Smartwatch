@@ -1,0 +1,54 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.background {
+    position: absolute;
+    width: 100vw;                
+    height: 100vh;               
+    background-image: url("../images/bkgrnd.jpg");
+    background-size: cover;      
+    background-position: center; 
+    background-repeat: no-repeat;
+
+    display: flex;               
+    flex-direction: column;
+    justify-content: center;     
+    align-items: center;       
+
+    color: white;                
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.LilyGo{
+    position: absolute;
+    top: 14%;
+    left: 58%;
+    height: 60vh;
+}
+
+.Huippu{
+    position: absolute;
+    left: 26%;
+    top: 16%;
+    width: 28vw;                
+
+}
+
+.icons{
+    position: absolute;
+    top: 36%;
+    left: 31%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+    width: 8vw;
+    z-index:10;
+}
+.dropdown {
+    position: relative;
+}
