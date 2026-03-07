@@ -419,8 +419,15 @@ void loop()
                 batteryPercent = watch->power->getBattPercentage();
 
                 // Display Battery %
-                watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
-                watch->tft->drawString(String(batteryPercent) + "%", 130, 170, 2);
+
+                if (batteryPercent > 100) {
+                    watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
+                    watch->tft->drawString(String("ERROR"), 130, 170, 2);
+                } else {
+                    watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
+                    watch->tft->drawString(String(batteryPercent) + "%", 130, 170, 2);
+                }
+
             
                 //If low battery
                 if (batteryPercent < 20) {
