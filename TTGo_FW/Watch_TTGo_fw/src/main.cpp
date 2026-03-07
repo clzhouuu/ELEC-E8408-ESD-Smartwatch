@@ -306,7 +306,8 @@ void loop()
                 break;
             }
         }
-        break;  
+        break;
+        
     }
     case 2:
     {
