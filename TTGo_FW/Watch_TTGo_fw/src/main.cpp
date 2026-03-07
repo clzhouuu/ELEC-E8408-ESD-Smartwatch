@@ -213,111 +213,112 @@ void loop()
     
     switch (state)
     {
+    // case 1:
+    // {
+    //     drawTime();
+    //     /* Initial stage */
+    //     //Basic interface
+    //     watch->tft->fillScreen(TFT_BLACK);
+    //     watch->tft->setTextFont(4);
+    //     watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
+    //     watch->tft->drawString("Hiking Watch",  45, 25, 4);
+    //     watch->tft->drawString("Press button", 50, 80);
+    //     watch->tft->drawString("to start session", 40, 110);
+        
+
+    //     // variable initiation
+
+    //     bool exitSync = false;
+
+    //     // Bluetooth discovery
+        
+    //     while (1)
+    //     {
+    //         /* Bluetooth sync */
+    //         if (SerialBT.available())
+    //         {
+    //             char incomingChar = SerialBT.read();
+    //             if (incomingChar == 'c' and sessionStored and not sessionSent)
+    //             {
+    //                 sendSessionBT();
+    //                 sessionSent = true;
+    //             }
+
+    //             if (sessionSent && sessionStored) {
+    //                 // Update timeout before blocking while
+    //                 updateTimeout = 0;
+    //                 last = millis();
+    //                 while(1)
+    //                 {
+    //                     updateTimeout = millis();
+
+    //                     if (SerialBT.available())
+    //                         incomingChar = SerialBT.read();
+    //                     if (incomingChar == 'r')
+    //                     {
+    //                         Serial.println("Got an R");
+    //                         // Delete session
+    //                         deleteSession();
+    //                         sessionStored = false;
+    //                         sessionSent = false;
+    //                         incomingChar = 'q';
+    //                         exitSync = true;
+    //                         break;
+    //                     }
+    //                     else if ((millis() - updateTimeout > 2000))
+    //                     {
+    //                         Serial.println("Waiting for timeout to expire");
+    //                         updateTimeout = millis();
+    //                         sessionSent = false;
+    //                         exitSync = true;
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         if (exitSync)
+    //         {
+    //             delay(1000);
+    //             watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+    //             watch->tft->drawString("Hiking Watch",  45, 25, 4);
+    //             watch->tft->drawString("Press button", 50, 80);
+    //             watch->tft->drawString("to start session", 40, 110);
+    //             exitSync = false;
+    //         }
+
+    //         /*      IRQ     */
+    //         if (irqButton) {
+    //             irqButton = false;
+    //             watch->power->readIRQ();
+    //             if (state == 1)
+    //             {
+    //                 state = 2;
+    //             }
+    //             watch->power->clearIRQ();
+    //         }
+    //         if (state == 2) {
+    //             if (sessionStored)
+    //             {
+    //                 watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+    //                 watch->tft->drawString("Overwriting",  55, 100, 4);
+    //                 watch->tft->drawString("session", 70, 130);
+    //                 delay(1000);
+    //             }
+    //             break;
+    //         }
+    //     }
+    //     break;
+        
+    // }
+    // case 2:
+    // {
+    //     /* Hiking session initalisation */
+    //     drawTime();
+        
+    //     state = 3;
+    //     break;
+    // }
     case 1:
-    {
-        drawTime();
-        /* Initial stage */
-        //Basic interface
-        watch->tft->fillScreen(TFT_BLACK);
-        watch->tft->setTextFont(4);
-        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-        watch->tft->drawString("Hiking Watch",  45, 25, 4);
-        watch->tft->drawString("Press button", 50, 80);
-        watch->tft->drawString("to start session", 40, 110);
-
-        // variable initiation
-
-        bool exitSync = false;
-
-        // Bluetooth discovery
-        
-        while (1)
-        {
-            /* Bluetooth sync */
-            if (SerialBT.available())
-            {
-                char incomingChar = SerialBT.read();
-                if (incomingChar == 'c' and sessionStored and not sessionSent)
-                {
-                    sendSessionBT();
-                    sessionSent = true;
-                }
-
-                if (sessionSent && sessionStored) {
-                    // Update timeout before blocking while
-                    updateTimeout = 0;
-                    last = millis();
-                    while(1)
-                    {
-                        updateTimeout = millis();
-
-                        if (SerialBT.available())
-                            incomingChar = SerialBT.read();
-                        if (incomingChar == 'r')
-                        {
-                            Serial.println("Got an R");
-                            // Delete session
-                            deleteSession();
-                            sessionStored = false;
-                            sessionSent = false;
-                            incomingChar = 'q';
-                            exitSync = true;
-                            break;
-                        }
-                        else if ((millis() - updateTimeout > 2000))
-                        {
-                            Serial.println("Waiting for timeout to expire");
-                            updateTimeout = millis();
-                            sessionSent = false;
-                            exitSync = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (exitSync)
-            {
-                delay(1000);
-                watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-                watch->tft->drawString("Hiking Watch",  45, 25, 4);
-                watch->tft->drawString("Press button", 50, 80);
-                watch->tft->drawString("to start session", 40, 110);
-                exitSync = false;
-            }
-
-            /*      IRQ     */
-            if (irqButton) {
-                irqButton = false;
-                watch->power->readIRQ();
-                if (state == 1)
-                {
-                    state = 2;
-                }
-                watch->power->clearIRQ();
-            }
-            if (state == 2) {
-                if (sessionStored)
-                {
-                    watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-                    watch->tft->drawString("Overwriting",  55, 100, 4);
-                    watch->tft->drawString("session", 70, 130);
-                    delay(1000);
-                }
-                break;
-            }
-        }
-        break;
-        
-    }
-    case 2:
-    {
-        /* Hiking session initalisation */
-        drawTime();
-        
-        state = 3;
-        break;
-    }
-    case 3:
     {
         /* Hiking session ongoing */
         drawTime();
@@ -355,7 +356,7 @@ void loop()
         watch->tft->drawString("0 %", 130, 170, 2);
 
         // loop
-        while (state == 3){
+        while (state == 1){
 
             // time display
             drawTime();
