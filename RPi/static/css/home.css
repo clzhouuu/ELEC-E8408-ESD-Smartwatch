@@ -20,35 +20,82 @@ html, body {
     align-items: center;       
 
     color: white;                
-    font-family: Arial, sans-serif;
     text-align: center;
 }
 
 .LilyGo{
     position: absolute;
     top: 14%;
-    left: 58%;
+    left: 55%;
     height: 60vh;
+}
+
+.square {
+    position: absolute;
+    top: 34.0%;
+    left: 59.2%;
+    width: 153px;
+    height: 200px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    transform: rotateY(-20deg);
+}
+.lilygo-logo{
+    position: absolute;
+    top: 35%;
+    left: 59.8%;
+    width: 80px;
+    height: 25px;
+}
+.total{
+    position: absolute;
+    top: 37%;
+    left: 59.2%;
+    width: 150px;
+    height: 120px;
+    color: #9AAFC0;
+    font-size: 52px;
+    font-family: 'Oswald', sans-serif;
+    transform: scaleY(1.8);
+}
+
+.fa-bluetooth{
+    position: absolute;
+    font-size :45px;
+    color:#9AAFC0;
+    top: 49%;
+    left: 59.7%;
 }
 
 .Huippu{
     position: absolute;
-    left: 26%;
+    left: 24%;
     top: 16%;
     width: 28vw;                
-
 }
 
 .icons{
     position: absolute;
     top: 36%;
-    left: 31%;
+    left: 29%;
     display: flex;
     flex-direction: column;
-    gap: 20px; 
-    width: 8vw;
+    gap: 25px; 
     z-index:10;
+    font-size: 25px;
+    color: #1f1f1f;
 }
+
 .dropdown {
     position: relative;
+}
+
+.dropdown-content {
+    font-family: 'Oswald', sans-serif;
+    display: none;
+    font-size: 20px;;
+}
+
+.dropdown.show .dropdown-content {
+    display: block;
 }
