@@ -23,8 +23,8 @@
                 <div class="dropdown">
                     <i class="fas fa-bars icon menu-icon"></i>
                     <div class="dropdown-content">
-                        <div class="dropdown-item">Last Session</div>
-                        <div class="dropdown-item">Hiking History</div>
+                        <div class="dropdown-item" data-page="/session-page">Last Session</div>
+                        <div class="dropdown-item" data-page="/history-page">Hiking History</div>
                     </div>
                 </div>     
 
@@ -63,12 +63,24 @@
         window.addEventListener('click', () => {
             dropdowns.forEach(d => d.classList.remove('show'));
         });
+        
+        const dropdownItem = document.querySelectorAll('.dropdown-item');
+        dropdownItem.forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.getAttribute('data-page');
+                if (page) {
+                    window.location.href = page;
+                }
+            });
+        });
+
         const saveButton = document.getElementById('save-settings');
         saveButton.addEventListener('click', () => {
             const height = document.getElementById('height').value;
             const weight = document.getElementById('weight').value;
             document.querySelector('.settings-icon').closest('.dropdown').classList.remove('show');
         });
+
     });
     </script>
 

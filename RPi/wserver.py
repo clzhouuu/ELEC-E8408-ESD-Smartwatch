@@ -14,6 +14,16 @@ def get_home():
     sessions = hdb.get_sessions() 
     return render_template('home.html', sessions=sessions)
 
+@app.route('/session-page')
+def get_session():
+    sessions = hdb.get_sessions() 
+    return render_template('session.html', sessions=sessions)
+
+@app.route('/history-page')
+def get_history():
+    sessions = hdb.get_sessions() 
+    return render_template('history.html', sessions=sessions)
+
 @app.route('/sessions')
 def get_sessions():
     sessions = hdb.get_sessions() 
