@@ -6,7 +6,7 @@ html, body {
 }
 
 .background {
-    position: absolute;
+    position: relative;
     width: 100vw;                
     height: 100vh;               
     background-image: url("../images/bkgrnd.jpg");
@@ -14,77 +14,89 @@ html, body {
     background-position: center; 
     background-repeat: no-repeat;
 
-    display: flex;               
-    flex-direction: column;
-    justify-content: center;     
-    align-items: center;       
-
-    color: white;                
-    text-align: center;
 }
 
-.LilyGo{
+.device{
     position: absolute;
     top: 14%;
     left: 55%;
+}
+
+.LilyGo{
+    display: block;
     height: 60vh;
+    display: block;
 }
 
 .square {
     position: absolute;
-    top: 34.0%;
-    left: 59.2%;
-    width: 153px;
-    height: 200px;
+    top: 50%;
+    left: 32%;
+    transform: translate(-50%, -50%) rotateY(-20deg);
+    width: 16vh;
+    height: 20vh;
     background-color: #f0f0f0;
-    border-radius: 8px;
-    transform: rotateY(-20deg);
+    border-radius: 0.5vh;
 }
 .lilygo-logo{
     position: absolute;
-    top: 35%;
-    left: 59.8%;
-    width: 80px;
-    height: 25px;
+    top: 37%;
+    left: 32%;
+    transform: translate(-50%, -50%);
+    width: 13vh;
+    height: 4vh;
 }
 .total{
     position: absolute;
     top: 37%;
-    left: 59.2%;
-    width: 150px;
-    height: 120px;
+    left: 19%;
+    transform: translate(-50%, -50%);
+    width: 13vhw;
+    height: 12vh;
     color: #9AAFC0;
-    font-size: 52px;
+    font-size: 5.5vh;
     font-family: 'Oswald', sans-serif;
     transform: scaleY(1.8);
 }
 
 .fa-bluetooth{
     position: absolute;
-    font-size :45px;
+    top: 62%;
+    left: 22%;
+    transform: translate(-50%, -50%);
+    font-size :4vh;
     color:#9AAFC0;
-    top: 49%;
-    left: 59.7%;
+}
+
+.text{
+    position: absolute;
+    top: 23%;
+    left: 23%;
+    height: 50vh;
+    width: 30vw;
+    display: flex;
+    flex-direction: column;  
+    align-items: center;
+    gap: 1.7vw;     
+    gap: 2vh;      
 }
 
 .Huippu{
-    position: absolute;
-    left: 24%;
-    top: 16%;
-    width: 28vw;                
+    width: 70%;  
+    height: 18% 
 }
 
 .icons{
+    top: 22%;
+    left: 15%;
     position: absolute;
-    top: 36%;
-    left: 29%;
-    display: flex;
     flex-direction: column;
-    gap: 25px; 
-    z-index:10;
-    font-size: 25px;
+    font-size: 3vh;
+    display: flex;
     color: #1f1f1f;
+    gap: 1.3vh;
 }
+
 
 .dropdown {
     position: relative;
@@ -93,7 +105,7 @@ html, body {
 .dropdown-content {
     font-family: 'Oswald', sans-serif;
     display: none;
-    font-size: 20px;;
+    font-size: 2.0vh;;
 }
 
 .dropdown.show .dropdown-content {
