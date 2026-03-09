@@ -457,7 +457,7 @@ void loop()
     {
         //Save hiking session data
         saveIdToFile(sessionId);
-        saveStepsToFile(step_count);
+        saveStepsToFile(steps);
         saveDistanceToFile(distance_m / 1000.0f);
 
         sessionStored = true;
