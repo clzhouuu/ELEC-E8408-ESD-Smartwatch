@@ -13,7 +13,9 @@ BluetoothSerial SerialBT;
 TTGOClass *watch;
 TFT_eSPI *tft;
 BMA *sensor;
-PCF8563_Class *rtc;
+
+// Global variable for StepCount
+uint32_t step_count = 0;
 
 // Global variables for batteryState
 int batteryPercent = 0;
@@ -30,28 +32,14 @@ volatile bool irqBMA = false;
 volatile bool irqButton = false;
 
 // input variables
-float height = 1.65;
-float weight = 50.0f;
+float height = 0.00165;
+float weight = 0.0f;
 
 // distance calculation variables
 uint32_t steps = 0;
 uint32_t lastStep = 0;
-uint32_t currentSteps = 0;
-
 float distance_m = 0.0f;
 const float stride = 0.43 * height;
-
-// time variables
-String sessionStartDate = "";
-String sessionStartTime = "";
-String sessionEndTime = "";
-
-unsigned long sessionStartMs = 0;
-unsigned long sessionDurationMs = 0;
-
-// calorie estimation variables
-uint32_t MET = 6;
-uint32_t caloriesBurned = 0;
 
 bool sessionStored = false;
 bool sessionSent = false;
@@ -90,10 +78,24 @@ void initHikeWatch()
         irqBMA = true; 
     }, RISING);
 
+
     // GPS
+    // Configure IMU
+
+    // Enable BMA423 step count feature
+
+    // Reset steps
+
+    // Turn on step interrupt
+
+    // BMA interupt
+
+
 
     // Pop-up messages
     // Tumbling
+
+    // hi sophia
 
     // Side button
     pinMode(AXP202_INT, INPUT_PULLUP);
@@ -183,10 +185,6 @@ void setup()
     //Receive objects for easy writing
     tft = watch->tft;
     sensor = watch->bma;
-    rtc = watch->rtc;
-
-    rtc -> check();
-
     
     initHikeWatch();
 
@@ -195,259 +193,190 @@ void setup()
     SerialBT.begin("Hiking Watch");
 }
 
-void drawTime(){
-    static unsigned long lastUpdate = 0;
-
-    if (millis() - lastUpdate > 1000) {
-        lastUpdate = millis();
-
-        watch->tft->fillRect(170, 5, 70, 20, TFT_BLACK); 
-        watch->tft->drawString(rtc->formatDateTime(PCF_TIMEFORMAT_HM), 170, 5);
-    }
-}
-
-
 void loop()
 {
-    drawTime();
-    
     switch (state)
     {
-    // case 1:
-    // {
-    //     drawTime();
-    //     /* Initial stage */
-    //     //Basic interface
-    //     watch->tft->fillScreen(TFT_BLACK);
-    //     watch->tft->setTextFont(4);
-    //     watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-    //     watch->tft->drawString("Hiking Watch",  45, 25, 4);
-    //     watch->tft->drawString("Press button", 50, 80);
-    //     watch->tft->drawString("to start session", 40, 110);
-        
-
-    //     // variable initiation
-
-    //     bool exitSync = false;
-
-    //     // Bluetooth discovery
-        
-    //     while (1)
-    //     {
-    //         /* Bluetooth sync */
-    //         if (SerialBT.available())
-    //         {
-    //             char incomingChar = SerialBT.read();
-    //             if (incomingChar == 'c' and sessionStored and not sessionSent)
-    //             {
-    //                 sendSessionBT();
-    //                 sessionSent = true;
-    //             }
-
-    //             if (sessionSent && sessionStored) {
-    //                 // Update timeout before blocking while
-    //                 updateTimeout = 0;
-    //                 last = millis();
-    //                 while(1)
-    //                 {
-    //                     updateTimeout = millis();
-
-    //                     if (SerialBT.available())
-    //                         incomingChar = SerialBT.read();
-    //                     if (incomingChar == 'r')
-    //                     {
-    //                         Serial.println("Got an R");
-    //                         // Delete session
-    //                         deleteSession();
-    //                         sessionStored = false;
-    //                         sessionSent = false;
-    //                         incomingChar = 'q';
-    //                         exitSync = true;
-    //                         break;
-    //                     }
-    //                     else if ((millis() - updateTimeout > 2000))
-    //                     {
-    //                         Serial.println("Waiting for timeout to expire");
-    //                         updateTimeout = millis();
-    //                         sessionSent = false;
-    //                         exitSync = true;
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         if (exitSync)
-    //         {
-    //             delay(1000);
-    //             watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-    //             watch->tft->drawString("Hiking Watch",  45, 25, 4);
-    //             watch->tft->drawString("Press button", 50, 80);
-    //             watch->tft->drawString("to start session", 40, 110);
-    //             exitSync = false;
-    //         }
-
-    //         /*      IRQ     */
-    //         if (irqButton) {
-    //             irqButton = false;
-    //             watch->power->readIRQ();
-    //             if (state == 1)
-    //             {
-    //                 state = 2;
-    //             }
-    //             watch->power->clearIRQ();
-    //         }
-    //         if (state == 2) {
-    //             if (sessionStored)
-    //             {
-    //                 watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-    //                 watch->tft->drawString("Overwriting",  55, 100, 4);
-    //                 watch->tft->drawString("session", 70, 130);
-    //                 delay(1000);
-    //             }
-    //             break;
-    //         }
-    //     }
-    //     break;
-        
-    // }
-    // case 2:
-    // {
-    //     /* Hiking session initalisation */
-    //     drawTime();
-        
-    //     state = 3;
-    //     break;
-    // }
     case 1:
     {
-        /* Hiking session ongoing */
-        drawTime();
-        sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
-        sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
-        sessionStartMs = millis();
-
+        /* Initial stage */
+        //Basic interface
         watch->tft->fillScreen(TFT_BLACK);
+        watch->tft->setTextFont(4);
         watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-        watch->tft->setTextFont(2); 
+        watch->tft->drawString("Hiking Watch",  45, 25, 4);
+        watch->tft->drawString("Press button", 50, 80);
+        watch->tft->drawString("to start session", 40, 110);
 
-        watch->tft->drawString("Starting hike", 55, 100, 2);
+        // variable initiation
+
+        bool exitSync = false;
+
+        //Bluetooth discovery
+        
+        while (1)
+        {
+            /* Bluetooth sync */
+            if (SerialBT.available())
+            {
+                char incomingChar = SerialBT.read();
+                if (incomingChar == 'c' and sessionStored and not sessionSent)
+                {
+                    sendSessionBT();
+                    sessionSent = true;
+                }
+
+                if (sessionSent && sessionStored) {
+                    // Update timeout before blocking while
+                    updateTimeout = 0;
+                    last = millis();
+                    while(1)
+                    {
+                        updateTimeout = millis();
+
+                        if (SerialBT.available())
+                            incomingChar = SerialBT.read();
+                        if (incomingChar == 'r')
+                        {
+                            Serial.println("Got an R");
+                            // Delete session
+                            deleteSession();
+                            sessionStored = false;
+                            sessionSent = false;
+                            incomingChar = 'q';
+                            exitSync = true;
+                            break;
+                        }
+                        else if ((millis() - updateTimeout > 2000))
+                        {
+                            Serial.println("Waiting for timeout to expire");
+                            updateTimeout = millis();
+                            sessionSent = false;
+                            exitSync = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (exitSync)
+            {
+                delay(1000);
+                watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+                watch->tft->drawString("Hiking Watch",  45, 25, 4);
+                watch->tft->drawString("Press button", 50, 80);
+                watch->tft->drawString("to start session", 40, 110);
+                exitSync = false;
+            }
+
+            /*      IRQ     */
+            if (irqButton) {
+                irqButton = false;
+                watch->power->readIRQ();
+                if (state == 1)
+                {
+                    state = 2;
+                }
+                watch->power->clearIRQ();
+            }
+            if (state == 2) {
+                if (sessionStored)
+                {
+                    watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+                    watch->tft->drawString("Overwriting",  55, 100, 4);
+                    watch->tft->drawString("session", 70, 130);
+                    delay(1000);
+                }
+                break;
+            }
+        }
+        break;
+        
+    }
+    case 2:
+    {
+        /* Hiking session initalisation */
+        
+        state = 3;
+        break;
+    }
+    case 3:
+    {
+        /* Hiking session ongoing */
+
+        watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
+        watch->tft->drawString("Starting hike", 45, 100);
         delay(2000);
-        watch->tft->fillScreen(TFT_BLACK);
+        watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
 
-        // Initial display
-        watch->tft->drawString("Steps:",    20, 50, 2);
-        watch->tft->drawString("Dist:",     20, 80, 2);
-        watch->tft->drawString("Calories:", 20, 110, 2);
-        watch->tft->drawString("Duration:", 20, 140, 2);
-        watch->tft->drawString("Battery:",  20, 170, 2);
+        watch->tft->setCursor(40, 70);
+        watch->tft->print("Steps: ");
+
+        watch->tft->setCursor(40, 100);
+        watch->tft->print("Dist: ");
+
+        watch->tft->setCursor(40, 130);
+        watch->tft->print("Battery: ");
+
+        last = millis();
+        updateTimeout = 0;
 
         //reset step-counter
         sensor->resetStepCounter();
         lastStep = 0;
         distance_m  = 0.0f;
-        currentSteps = 0;
-        last = millis();
-        updateTimeout = 0;
 
-        watch->tft->drawString("0",      130, 50, 2);
-        watch->tft->drawString("0.00 km",130, 80, 2);
-        watch->tft->drawString("0 kcal",130, 110, 2);
-        watch->tft->drawString("00:00:00", 130, 140, 2);
-        watch->tft->drawString("0 %", 130, 170, 2);
+        uint32_t step_count = 0;
 
         // loop
-        while (state == 1){
-
-            // time display
-            drawTime();
-        
-            static unsigned long lastDurationUpdate = 0;
-
-            if (millis() - lastDurationUpdate > 1000) {
-                lastDurationUpdate = millis();
-                sessionDurationMs = millis() - sessionStartMs;
-
-                unsigned long totalSeconds = sessionDurationMs / 1000;
-                unsigned long seconds = totalSeconds % 60;
-                unsigned long minutes = (totalSeconds % 3600) / 60;
-                unsigned long hours = totalSeconds / 3600;
-
-                watch->tft->fillRect(130, 140, 90, 16, TFT_BLACK);
-                watch->tft->setCursor(130, 140);
-
-                if (hours < 10) watch->tft->print("0");
-                watch->tft->print(hours);
-                watch->tft->print(":");
-
-                if (minutes < 10) watch->tft->print("0");
-                watch->tft->print(minutes);
-                watch->tft->print(":");
-
-                if (seconds < 10) watch->tft->print("0");
-                watch->tft->print(seconds);
-            }
-
+        while (state == 3){
             if (irqBMA){
                 irqBMA = false;
 
                 sensor->readInterrupt();
                 if (sensor->isStepCounter()){
-                    // steps
-                    currentSteps = sensor->getCounter(); 
-                    uint32_t delta = currentSteps - lastStep;
-                    lastStep = currentSteps;
+                    step_count = sensor->getCounter();
 
-                    // distance
-                    distance_m += delta * stride; 
-                    
-                    // calories
-                    caloriesBurned = (MET * weight * sessionDurationMs) / 3600000;
+                    uint32_t delta = step_count - lastStep;
+                    lastStep = step_count;
 
-                    watch->tft->fillRect(130, 50, 80, 16, TFT_BLACK);
-                    watch->tft->drawString(String(currentSteps), 130, 50, 2);
+                    distance_m += delta * stride;  
 
-                    watch->tft->fillRect(130, 80, 90, 16, TFT_BLACK);
-                    watch->tft->drawString(String(distance_m / 1000.0f, 2) + " km", 130, 80, 2);
+                    watch->tft->fillRect(120, 70, 100, 20, TFT_BLACK);
+                    watch->tft->setCursor(130, 70);
+                    watch->tft->print(step_count);
 
-                    watch->tft->fillRect(130, 110, 90, 16, TFT_BLACK);
-                    watch->tft->drawString(String(caloriesBurned) + " kcal", 130, 110, 2);
+                    watch->tft->fillRect(120, 100, 100, 20, TFT_BLACK);
+                    watch->tft->setCursor(130, 100);
+                    watch->tft->print(distance_m / 1000.0f, 2);
+                    watch->tft->print(" km");
                 }
 
-            }
+                if (millis() - batteryTimer > 5000){
+                    batteryTimer = millis();
+                    batteryPercent = watch->power->getBattPercentage();
 
-            if (millis() - batteryTimer > 5000){
-                batteryTimer = millis();
-                batteryPercent = watch->power->getBattPercentage();
-
-                // Display Battery %
-
-                if (batteryPercent > 100) {
-                    watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
-                    watch->tft->drawString(String("ERROR"), 130, 170, 2);
-                } else {
-                    watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
-                    watch->tft->drawString(String(batteryPercent) + "%", 130, 170, 2);
+                    // Display Battery %
+                    watch->tft->fillRect(120, 130, 100, 20, TFT_BLACK);
+                    watch->tft->setCursor(130, 130);
+                    watch->tft->printf("%d%%", batteryPercent);
+                
+                    //If low battery
+                    if (batteryPercent < 20) {
+                        watch->tft->setCursor(40, 200);
+                        watch->tft->setTextColor(TFT_RED, TFT_BLACK);
+                        watch->tft->printf("LOW BATTERY!");
+                        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
+                    }
+                
                 }
 
-            
-                //If low battery
-                if (batteryPercent < 20) {
-                    watch->tft->setTextColor(TFT_RED, TFT_BLACK);
-                    watch->tft->drawString("LOW BATTERY!", 40, 190, 2);
-                    watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-                } else {
-                    watch->tft->fillRect(40, 190, 140, 16, TFT_BLACK);
-                }
             }
 
             // --- Button interrupt to end hike ---
             if (irqButton)
             {
-                sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
-                sessionDurationMs = millis() - sessionStartMs;
                 irqButton = false;
                 state = 4;
-                
             }
         }
         break;      
@@ -456,7 +385,13 @@ void loop()
     case 4:
     {
         //Save hiking session data
-        delay(1000);
+        saveIdToFile(sessionId);
+        saveStepsToFile(step_count);
+        saveDistanceToFile(distance_m / 1000.0f);
+
+        sessionStored = true;
+        sessionSent = false;
+        
         state = 1;  
         break;
     }
