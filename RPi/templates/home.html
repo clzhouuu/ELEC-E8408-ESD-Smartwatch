@@ -18,6 +18,7 @@
         </div>
         <div class="text">
             <img src="/static/images/Huippu.png" class="Huippu">
+            
             <div class="icons">
                 <div class="dropdown">
                     <i class="fas fa-bars icon menu-icon"></i>
@@ -26,7 +27,18 @@
                         <div class="dropdown-item">Hiking History</div>
                     </div>
                 </div>     
-                <i class="fas fa-cog icon"></i>      
+
+                <div class="dropdown">
+                    <i class="fas fa-cog icon"></i>   
+                    <div class="dropdown-content">
+                        <label for="height">Height (cm):</label>
+                        <input type="number" id="height" min="100" max="200" step="1">
+                        <label for="weight">Weight (kg):</label>
+                        <input type="number" id="weight" min="20" max="200" step="1">
+                        <button id="save-settings">Save</button>
+                    </div>  
+                </div>
+                   
             </div>
         </div>
 
@@ -35,18 +47,27 @@
     
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const menuIcon = document.querySelector('.menu-icon');  
-        const dropdown = document.querySelector('.dropdown');  
+    document.addEventListener('DOMContentLoaded', () => { 
+        const dropdown = document.querySelectorAll('.dropdown');  
 
-        menuIcon.addEventListener('click', () => {
-            dropdown.classList.toggle('show');
+        dropdown.forEach(dropdown => {
+            const icon = dropdown.querySelector('.icon');
+            icon.addEventListener('click', e => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                dropdowns.forEach(d => {
+                    if (d !== dropdown) d.classList.remove('show');
+                });
+            });
         });
-
-        window.addEventListener('click', (e) => {
-            if (!dropdown.contains(e.target)) {
-                dropdown.classList.remove('show');
-            }
+        window.addEventListener('click', () => {
+            dropdowns.forEach(d => d.classList.remove('show'));
+        });
+        const saveButton = document.getElementById('save-settings');
+        saveButton.addEventListener('click', () => {
+            const height = document.getElementById('height').value;
+            const weight = document.getElementById('weight').value;
+            document.querySelector('.settings-icon').closest('.dropdown').classList.remove('show');
         });
     });
     </script>
