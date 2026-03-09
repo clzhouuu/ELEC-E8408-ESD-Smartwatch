@@ -35,7 +35,7 @@
                         <input type="number" id="height" min="100" max="200" step="1">
                         <label for="weight">Weight (kg):</label>
                         <input type="number" id="weight" min="20" max="200" step="1">
-                        <button id="save-settings">Save</button>
+                        <button id="save-settings" disabled>Save</button>
                     </div>  
                 </div>
                    
@@ -47,8 +47,14 @@
     
 
     <script>
+        
     document.addEventListener('DOMContentLoaded', () => { 
         const dropdown = document.querySelectorAll('.dropdown');  
+        const heightInput = document.getElementById('height');
+        const weightInput = document.getElementById('weight');
+        const saveButton = document.getElementById('save-settings');
+        let originalHeight = '';
+        let originalWeight = '';
 
         dropdown.forEach(dropdown => {
             const icon = dropdown.querySelector('.icon');
@@ -60,9 +66,6 @@
                 });
             });
         });
-        window.addEventListener('click', () => {
-            dropdowns.forEach(d => d.classList.remove('show'));
-        });
         
         const dropdownItem = document.querySelectorAll('.dropdown-item');
         dropdownItem.forEach(item => {
@@ -73,16 +76,44 @@
                 }
             });
         });
+        function checkIfChanged() {
+            const changed =
+                heightInput.value != originalHeight ||
+                weightInput.value != originalWeight;
+            saveButton.disabled = !changed;
+        }
 
-        const saveButton = document.getElementById('save-settings');
-        saveButton.addEventListener('click', () => {
-            const height = document.getElementById('height').value;
-            const weight = document.getElementById('weight').value;
-            document.querySelector('.settings-icon').closest('.dropdown').classList.remove('show');
-        });
+        async function loadSettings() {
+            const response = await fetch('/settings');
+            const data = await response.json();
+            heightInput.value = data.height;
+            weightInput.value = data.weight;
+            originalHeight = data.height;
+            originalWeight = data.weight;
+            saveButton.disabled = true;
+        }
 
+        heightInput.addEventListener('input', checkIfChanged);
+        weightInput.addEventListener('input', checkIfChanged);
+
+        saveButton.addEventListener('click', async () => {
+            const height = heightInput.value;
+            const weight = weightInput.value;
+
+            await fetch('/save-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ height: height, weight: weight })
+            });
+            originalHeight = height;
+            originalWeight = weight;
+            saveButton.disabled = true;
+            });
+
+        loadSettings();
     });
     </script>
-
 </body>
 </html>

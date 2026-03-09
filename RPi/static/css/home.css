@@ -102,12 +102,17 @@ html, body {
 }
 
 .dropdown-content {
-    
     font-family: 'Oswald', sans-serif;
     display: none;
     font-size: 2.0vh;
 }
-
+.dropdown-content input,
+.dropdown-content button {
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.1vh;
+    font-size: 1.8vh
+}
 .dropdown.show .dropdown-content {
     display: block;
 }
