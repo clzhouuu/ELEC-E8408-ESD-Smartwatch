@@ -2,11 +2,27 @@
 <html>
     <head>
         <title> Hiking Session </title>
-        <link rel="stylesheet" href="../static/css/home.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="/static/css/session.css">
         <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Oswald&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.5/dist/leaflet.css"/>
     </head>
     <body>
-        <h1>Hiking Session</h1>
+        <div id="map"></div>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            const map = L.map('map').setView([60.1699, 24.9384], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                subdomains: 'abcd',
+                maxZoom: 20,
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+            }).addTo(map);
+        </script>
+        <info>
+            <text class="step">Stepcount:</text>
+            <text class="distance">Travelled Distance:</text>
+            <text class="calories">Burned Calories:</text>
+            <text class="time">Duration:</text>
+        </info>
     </body>
 </html>
+
