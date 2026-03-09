@@ -14,16 +14,15 @@ TTGOClass *watch;
 TFT_eSPI *tft;
 BMA *sensor;
 PCF8563_Class *rtc;
+TinyGPSPlus *gps;          // GPS added
 
 // Global variables for batteryState
 int batteryPercent = 0;
 unsigned long batteryTimer = 0;
 
 uint32_t sessionId = 30;
-
 unsigned long last = 0;
 unsigned long updateTimeout = 0;
-
 
 volatile uint8_t state;
 volatile bool irqBMA = false;
@@ -37,7 +36,6 @@ float weight = 50.0f;
 uint32_t steps = 0;
 uint32_t lastStep = 0;
 uint32_t currentSteps = 0;
-
 float distance_m = 0.0f;
 const float stride = 0.43 * height;
 
@@ -45,7 +43,6 @@ const float stride = 0.43 * height;
 String sessionStartDate = "";
 String sessionStartTime = "";
 String sessionEndTime = "";
-
 unsigned long sessionStartMs = 0;
 unsigned long sessionDurationMs = 0;
 
@@ -55,6 +52,19 @@ uint32_t caloriesBurned = 0;
 
 bool sessionStored = false;
 bool sessionSent = false;
+
+// GPS variables
+struct GpsPoint {
+    double lat;
+    double lon;
+    unsigned long ms;
+};
+
+const int MAX_GPS_POINTS = 500;
+GpsPoint gpsPoints[MAX_GPS_POINTS];
+int gpsPointCount = 0;
+unsigned long lastGpsSave = 0;      // throttles point capture (every 3s)
+unsigned long lastGpsFileSave = 0;  // throttles file write (every 15s)
 
 void initHikeWatch()
 {
@@ -84,16 +94,11 @@ void initHikeWatch()
     // Turn on step interrupt
     sensor->enableStepCountInterrupt();
 
-    // BMA interupt
+    // BMA interrupt
     pinMode(BMA423_INT1, INPUT);
     attachInterrupt(BMA423_INT1, [] { 
         irqBMA = true; 
     }, RISING);
-
-    // GPS
-
-    // Pop-up messages
-    // Tumbling
 
     // Side button
     pinMode(AXP202_INT, INPUT_PULLUP);
@@ -143,7 +148,6 @@ void sendSessionBT()
     SerialBT.write('\n');
 }
 
-
 void saveIdToFile(uint16_t id)
 {
     char buffer[10];
@@ -160,8 +164,8 @@ void saveStepsToFile(uint32_t step_count)
 
 void saveDistanceToFile(float distance)
 {
-    char buffer[10];
-    itoa(distance, buffer, 10);
+    char buffer[16];
+    dtostrf(distance, 6, 3, buffer);
     writeFile(LITTLEFS, "/distance.txt", buffer);
 }
 
@@ -171,6 +175,42 @@ void deleteSession()
     deleteFile(LITTLEFS, "/distance.txt");
     deleteFile(LITTLEFS, "/steps.txt");
     deleteFile(LITTLEFS, "/coord.txt");
+}
+
+// GPS - log a point every 3 seconds if valid fix
+void logGps() {
+    watch->gpsHandler();
+
+    if (!gps) return;
+    if (!gps->location.isValid() || !gps->location.isUpdated()) return;
+    if (millis() - lastGpsSave < 3000) return;
+
+    lastGpsSave = millis();
+
+    if (gpsPointCount < MAX_GPS_POINTS) {
+        gpsPoints[gpsPointCount++] = {
+            gps->location.lat(),
+            gps->location.lng(),
+            millis() - sessionStartMs
+        };
+    }
+}
+
+// GPS - write all captured points to file
+void saveGpsPointsToFile() {
+    File file = LITTLEFS.open("/coord.txt", FILE_WRITE);
+    if (!file) {
+        Serial.println("Failed to open /coord.txt");
+        return;
+    }
+    for (int i = 0; i < gpsPointCount; i++) {
+        file.print(gpsPoints[i].lat, 6);
+        file.print(",");
+        file.print(gpsPoints[i].lon, 6);
+        file.print(",");
+        file.println(gpsPoints[i].ms);
+    }
+    file.close();
 }
 
 void setup()
@@ -185,12 +225,16 @@ void setup()
     sensor = watch->bma;
     rtc = watch->rtc;
 
-    rtc -> check();
+    rtc->check();
 
-    
+    // GPS
+    watch->trunOnGPS();
+    watch->gps_begin();
+    gps = watch->gps;
+
     initHikeWatch();
 
-    state = 1;
+    state = 3;
 
     SerialBT.begin("Hiking Watch");
 }
@@ -200,12 +244,10 @@ void drawTime(){
 
     if (millis() - lastUpdate > 1000) {
         lastUpdate = millis();
-
         watch->tft->fillRect(170, 5, 70, 20, TFT_BLACK); 
         watch->tft->drawString(rtc->formatDateTime(PCF_TIMEFORMAT_HM), 170, 5);
     }
 }
-
 
 void loop()
 {
@@ -216,6 +258,7 @@ void loop()
     case 1:
     {
         drawTime();
+
         /* Initial stage */
         //Basic interface
         watch->tft->fillScreen(TFT_BLACK);
@@ -224,14 +267,11 @@ void loop()
         watch->tft->drawString("Hiking Watch",  45, 25, 4);
         watch->tft->drawString("Press button", 50, 80);
         watch->tft->drawString("to start session", 40, 110);
-        
 
         // variable initiation
-
         bool exitSync = false;
 
         // Bluetooth discovery
-        
         while (1)
         {
             /* Bluetooth sync */
@@ -243,7 +283,6 @@ void loop()
                     sendSessionBT();
                     sessionSent = true;
                 }
-
                 if (sessionSent && sessionStored) {
                     // Update timeout before blocking while
                     updateTimeout = 0;
@@ -251,7 +290,6 @@ void loop()
                     while(1)
                     {
                         updateTimeout = millis();
-
                         if (SerialBT.available())
                             incomingChar = SerialBT.read();
                         if (incomingChar == 'r')
@@ -308,20 +346,28 @@ void loop()
             }
         }
         break;
-        
     }
+
     case 2:
     {
-        /* Hiking session initalisation */
+        /* Hiking session initialisation */
         drawTime();
-        
+
+        // Reset GPS state for new session
+        deleteFile(LITTLEFS, "/coord.txt");
+        gpsPointCount   = 0;
+        lastGpsSave     = 0;
+        lastGpsFileSave = 0;
+
         state = 3;
         break;
     }
+
     case 3:
     {
         /* Hiking session ongoing */
         drawTime();
+
         sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
         sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
         sessionStartMs = millis();
@@ -344,25 +390,31 @@ void loop()
         //reset step-counter
         sensor->resetStepCounter();
         lastStep = 0;
-        distance_m  = 0.0f;
+        distance_m = 0.0f;
         currentSteps = 0;
         last = millis();
         updateTimeout = 0;
 
-        watch->tft->drawString("0",      130, 50, 2);
-        watch->tft->drawString("0.00 km",130, 80, 2);
-        watch->tft->drawString("0 kcal",130, 110, 2);
-        watch->tft->drawString("00:00:00", 130, 140, 2);
-        watch->tft->drawString("0 %", 130, 170, 2);
+        watch->tft->drawString("0",         130, 50, 2);
+        watch->tft->drawString("0.00 km",   130, 80, 2);
+        watch->tft->drawString("0 kcal",    130, 110, 2);
+        watch->tft->drawString("00:00:00",  130, 140, 2);
+        watch->tft->drawString("0 %",       130, 170, 2);
 
         // loop
-        while (state == 3){
+        while (state == 3) {
 
             // time display
             drawTime();
+
+            // GPS - log point and periodically flush to file
+            logGps();
+            if (millis() - lastGpsFileSave > 15000) {
+                lastGpsFileSave = millis();
+                saveGpsPointsToFile();
+            }
         
             static unsigned long lastDurationUpdate = 0;
-
             if (millis() - lastDurationUpdate > 1000) {
                 lastDurationUpdate = millis();
                 sessionDurationMs = millis() - sessionStartMs;
@@ -378,20 +430,17 @@ void loop()
                 if (hours < 10) watch->tft->print("0");
                 watch->tft->print(hours);
                 watch->tft->print(":");
-
                 if (minutes < 10) watch->tft->print("0");
                 watch->tft->print(minutes);
                 watch->tft->print(":");
-
                 if (seconds < 10) watch->tft->print("0");
                 watch->tft->print(seconds);
             }
 
-            if (irqBMA){
+            if (irqBMA) {
                 irqBMA = false;
-
                 sensor->readInterrupt();
-                if (sensor->isStepCounter()){
+                if (sensor->isStepCounter()) {
                     // steps
                     currentSteps = sensor->getCounter(); 
                     uint32_t delta = currentSteps - lastStep;
@@ -412,33 +461,30 @@ void loop()
                     watch->tft->fillRect(130, 110, 90, 16, TFT_BLACK);
                     watch->tft->drawString(String(caloriesBurned) + " kcal", 130, 110, 2);
                 }
-
             }
 
-            if (millis() - batteryTimer > 5000){
+            if (millis() - batteryTimer > 5000) {
                 batteryTimer = millis();
-                batteryPercent = watch->power->getBattPercentage();
 
-                // Display Battery %
-
-                if (batteryPercent > 100) {
-                    watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
-                    watch->tft->drawString(String("ERROR"), 130, 170, 2);
+                if (watch->power->isChargeing()) {
+                    batteryPercent = watch->power->getBattPercentage();
                 } else {
-                    watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
-                    watch->tft->drawString(String(batteryPercent) + "%", 130, 170, 2);
+                    float v = watch->power->getBattVoltage() / 1000.0f;
+                    batteryPercent = constrain((int)((v - 3.3f) / (4.2f - 3.3f) * 100), 0, 100);
                 }
 
-            
-                //If low battery
+                watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
+                watch->tft->drawString(String(batteryPercent) + "%", 130, 170);
+
                 if (batteryPercent < 20) {
                     watch->tft->setTextColor(TFT_RED, TFT_BLACK);
-                    watch->tft->drawString("LOW BATTERY!", 40, 190, 2);
+                    watch->tft->drawString("LOW BATTERY!", 40, 190);
                     watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
                 } else {
                     watch->tft->fillRect(40, 190, 140, 16, TFT_BLACK);
                 }
             }
+        
 
             // --- Button interrupt to end hike ---
             if (irqButton)
@@ -447,15 +493,15 @@ void loop()
                 sessionDurationMs = millis() - sessionStartMs;
                 irqButton = false;
                 state = 4;
-                
             }
         }
         break;      
-
     }
+
     case 4:
     {
-        //Save hiking session data
+        // Save hiking session data
+        saveGpsPointsToFile();      // flush remaining GPS points
         saveIdToFile(sessionId);
         saveStepsToFile(steps);
         saveDistanceToFile(distance_m / 1000.0f);
@@ -466,6 +512,7 @@ void loop()
         state = 1;  
         break;
     }
+
     default:
         // Restart watch
         ESP.restart();
