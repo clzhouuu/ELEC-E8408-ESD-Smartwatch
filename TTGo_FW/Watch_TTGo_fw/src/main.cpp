@@ -237,6 +237,7 @@ void setup()
     state = 3;
 
     SerialBT.begin("Hiking Watch");
+    Serial.println("Bluetooth started"); //show indication
 }
 
 void drawTime(){
@@ -503,7 +504,7 @@ void loop()
         // Save hiking session data
         saveGpsPointsToFile();      // flush remaining GPS points
         saveIdToFile(sessionId);
-        saveStepsToFile(steps);
+        saveStepsToFile(currentSteps);
         saveDistanceToFile(distance_m / 1000.0f);
 
         sessionStored = true;
