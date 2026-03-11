@@ -144,6 +144,8 @@ void sendSessionBT()
     // Sending distance
     sendDataBT(LITTLEFS, "/distance.txt");
     SerialBT.write(';');
+    // Sending GPS
+    sendDataBT(LITTLEFS, "/coord.txt");
     // Send connection termination char
     SerialBT.write('\n');
 }
