@@ -157,16 +157,19 @@ class HubBluetooth:
         assert len(parts) >= 3, f"MessageProcessingError -> The incoming message doesn't contain enough information: {m}"
 
         hs = hike.HikeSession()
-        hs.id     = int(parts[0])
-        hs.steps  = int(parts[1])
-        hs.km     = float(parts[2])
+        hs.id         = int(parts[0])
+        hs.steps      = int(parts[1])
+        hs.km         = float(parts[2])
+        hs.start_time = str(parts[3]) 
+        hs.duration   = str(parts[4]) 
+        hs.date       = str(parts[5])
 
         def cvt_coord(c):
             sc = c.split(',')
             assert len(sc) == 3, f"MessageProcessingError -> Unable to process coordinate: {c}"
             return float(sc[0]), float(sc[1]), float(sc[2])
 
-        if len(parts) > 3:
-            hs.coords = list(map(cvt_coord, parts[3:]))
+        if len(parts) > 6:
+            hs.coords = list(map(cvt_coord, parts[6:]))
 
         return hs
