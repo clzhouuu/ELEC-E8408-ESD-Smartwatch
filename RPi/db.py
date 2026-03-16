@@ -12,6 +12,7 @@ DB_SESSION_TABLE = {
         "km REAL",
         "steps integer",
         "burnt_kcal integer",
+        "date integer",
         "start_time integer",
         "duration integer"
     ]
@@ -80,7 +81,7 @@ class HubDatabase:
 
             try:
                 self.cur.execute(
-                    f"INSERT INTO {DB_SESSION_TABLE['name']} VALUES (?, ?, ?, ?)", (s.id, s.km, s.steps, s.kcal))   
+                    f"INSERT INTO {DB_SESSION_TABLE['name']} VALUES (?, ?, ?, ?, ?, ?, ?)", (s.id, s.km, s.steps, s.kcal, s.date, s.start_time, s.duration))
                 for lat, lon, alt in s.coords:
                     self.cur.execute(
                         f"INSERT INTO {DB_GPS_TABLE['name']} (session_id, lat, lon, alt) VALUES (?, ?, ?, ?)",(s.id, lat, lon, alt))         
