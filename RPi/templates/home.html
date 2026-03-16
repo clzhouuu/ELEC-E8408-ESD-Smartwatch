@@ -14,7 +14,7 @@
             <div class="square"></div>
             <img src="/static/images/lilygo-logo.png" class="lilygo-logo">
             <h1 class="total">{{ sessions | sum(attribute='km') | int }} KM</h1>
-            <div class="bt-icon-wrapper {% if not bt_connected %}disconnected{% endif %}">
+            <div class="bt-icon-wrapper" id="bt-icon">
                 <i class="fa-brands fa-bluetooth"></i>
             </div>
         </div>
@@ -126,7 +126,21 @@
             originalWeight = weight;
             saveButton.disabled = true;
             });
-
+        
+        
+        async function updateBtStatus() {
+            const res = await fetch('/bt-status');
+            const data = await res.json();
+            const el = document.getElementById('bt-icon');
+            if (data.connected) {
+                el.classList.remove('disconnected');
+            } else {
+                el.classList.add('disconnected');
+            }
+        }
+        setInterval(updateBtStatus, 3000);
+        updateBtStatus();
+        
         loadSettings();
     });
     </script>

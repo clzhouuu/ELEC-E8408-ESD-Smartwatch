@@ -21,7 +21,7 @@ if metrics:
 def get_home():
     sessions = hdb.get_sessions() 
     bt = hubbt.connected
-    return render_template('home.html', sessions=sessions, bt_connected=bt)
+    return render_template('home.html', sessions=sessions)
 
 @app.route('/session-page')
 def get_session():
@@ -71,6 +71,10 @@ def save_settings():
     hubbt.send_package(outbound_package.load_metrics(hdb))
 
     return jsonify({"height": height, "weight": weight})
+    
+@app.route('/bt-status')
+def bt_status():
+    return jsonify({"connected": hubbt.connected})
 
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)
