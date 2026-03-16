@@ -1,0 +1,29 @@
+html, body { height: 100%; margin: 0; }
+#map { height: 100vh; width: 100vw; }
+
+#map.leaflet-container { position: relative !important; overflow: hidden !important; }
+#map .leaflet-pane,
+#map .leaflet-layer,
+#map .leaflet-tile-container { position: absolute !important; left: 0 !important; top: 0 !important; }
+
+#map img.leaflet-tile {
+  position: absolute !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+info{
+    background: rgba(100, 120, 140, 0.6);
+    padding: 3vh 3vh;
+    border-radius: 0.5vh;
+    font-family: 'Oswald', sans-serif;
+    top: 12%;
+    left: 6%;
+    position: absolute;
+    flex-direction: column;
+    font-size: 4.0vh;
+    display: flex;
+    color: #1f1f1f;
+    gap: 0.7vh;
+    
+}

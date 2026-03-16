@@ -1,0 +1,131 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.background {
+    position: relative;
+    width: 100vw;                
+    height: 100vh;               
+    background-image: url("../images/bkgrnd.jpg");
+    background-size: cover;      
+    background-position: center; 
+    background-repeat: no-repeat;
+
+}
+
+.device{
+    position: absolute;
+    top: 14%;
+    left: 55%;
+}
+
+.LilyGo{
+    display: block;
+    height: 60vh;
+    display: block;
+}
+
+.square {
+    position: absolute;
+    top: 50%;
+    left: 32%;
+    transform: translate(-50%, -50%) rotateY(-20deg);
+    width: 16vh;
+    height: 20vh;
+    background-color: #f0f0f0;
+    border-radius: 0.5vh;
+}
+.lilygo-logo{
+    position: absolute;
+    top: 37%;
+    left: 32%;
+    transform: translate(-50%, -50%);
+    width: 13vh;
+    height: 4vh;
+}
+.total{
+    position: absolute;
+    top: 38%;
+    left: 19%;
+    transform: translate(-50%, -50%);
+    width: 13vhw;
+    height: 12vh;
+    color: #9AAFC0;
+    font-size: 5.5vh;
+    font-family: 'Oswald', sans-serif;
+    transform: scaleY(1.8);
+}
+
+.bt-icon-wrapper{
+    position: absolute;
+    top: 62%;
+    left: 22%;
+    transform: translate(-50%, -50%);
+    font-size :4vh;
+    color:#9AAFC0;
+}
+
+
+.bt-icon-wrapper.disconnected::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 130%;
+    height: 3px;
+    background-color: #9AAFC0;
+}
+
+
+.text{
+    position: absolute;
+    top: 23%;
+    left: 23%;
+    height: 50vh;
+    width: 30vw;
+    display: flex;
+    flex-direction: column;  
+    align-items: center;
+    gap: 1.7vw;     
+    gap: 2vh;      
+}
+
+.Huippu{
+    width: 70%;  
+    height: 18% 
+}
+
+.icons{
+    top: 22%;
+    left: 15%;
+    position: absolute;
+    flex-direction: column;
+    font-size: 3vh;
+    display: flex;
+    color: #1f1f1f;
+    gap: 1.3vh;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    font-family: 'Oswald', sans-serif;
+    display: none;
+    font-size: 2.0vh;
+}
+.dropdown-content input,
+.dropdown-content button {
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.1vh;
+    font-size: 1.8vh
+}
+.dropdown.show .dropdown-content {
+    display: block;
+}

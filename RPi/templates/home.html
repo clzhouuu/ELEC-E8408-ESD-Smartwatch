@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Oswald&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <div class="background">
+        
+        <div class="device">
+            <img src="/static/images/LilyGo.png" class="LilyGo">
+            <div class="square"></div>
+            <img src="/static/images/lilygo-logo.png" class="lilygo-logo">
+            <h1 class="total">{{ sessions | sum(attribute='km') | round(1) }} KM</h1>
+            <div class="bt-icon-wrapper {% if not bt_connected %}disconnected{% endif %}">
+                <i class="fa-brands fa-bluetooth"></i>
+            </div>
+        </div>
+        <div class="text">
+            <img src="/static/images/Huippu.png" class="Huippu">
+            
+            <div class="icons">
+                <div class="dropdown">
+                    <i class="fas fa-bars icon menu-icon"></i>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item" data-page="/session-page">Last Session</div>
+                        <div class="dropdown-item" data-page="/history-page">Hiking History</div>
+                    </div>
+                </div>     
+
+                <div class="dropdown">
+                    <i class="fas fa-cog icon"></i>   
+                    <div class="dropdown-content">
+                        <label for="height">Height (cm):</label>
+                        <input type="number" id="height" min="100" max="200" step="1">
+                        <label for="weight">Weight (kg):</label>
+                        <input type="number" id="weight" min="20" max="200" step="1">
+                        <button id="save-settings" disabled>Save</button>
+                    </div>  
+                </div>
+                   
+            </div>
+        </div>
+
+    </div>
+
+    
+
+    <script>
+        
+    document.addEventListener('DOMContentLoaded', () => { 
+        const dropdown = document.querySelectorAll('.dropdown');  
+        const heightInput = document.getElementById('height');
+        const weightInput = document.getElementById('weight');
+        const saveButton = document.getElementById('save-settings');
+        let originalHeight = '';
+        let originalWeight = '';
+
+        dropdown.forEach(dropdown => {
+            const icon = dropdown.querySelector('.icon');
+            icon.addEventListener('click', e => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                dropdowns.forEach(d => {
+                    if (d !== dropdown) d.classList.remove('show');
+                });
+            });
+        });
+        
+        const dropdownItem = document.querySelectorAll('.dropdown-item');
+        dropdownItem.forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.getAttribute('data-page');
+                if (page) {
+                    window.location.href = page;
+                }
+            });
+        });
+        function checkIfChanged() {
+            const changed =
+                heightInput.value != originalHeight ||
+                weightInput.value != originalWeight;
+            saveButton.disabled = !changed;
+        }
+
+        async function loadSettings() {
+            const response = await fetch('/settings');
+            const data = await response.json();
+            heightInput.value = data.height;
+            weightInput.value = data.weight;
+            originalHeight = data.height;
+            originalWeight = data.weight;
+            saveButton.disabled = true;
+        }
+
+        heightInput.addEventListener('input', checkIfChanged);
+        weightInput.addEventListener('input', checkIfChanged);
+
+        saveButton.addEventListener('click', async () => {
+            const height = heightInput.value;
+            const weight = weightInput.value;
+
+            await fetch('/save-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ height: height, weight: weight })
+            });
+            originalHeight = height;
+            originalWeight = weight;
+            saveButton.disabled = true;
+            });
+
+        loadSettings();
+    });
+    </script>
+</body>
+</html>

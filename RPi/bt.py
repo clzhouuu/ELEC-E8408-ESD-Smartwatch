@@ -1,9 +1,9 @@
 import bluetooth
 import time
-
+import outbound_package
 import hike
 
-WATCH_BT_MAC = 'XX:XX:XX:XX:XX:XX'
+WATCH_BT_MAC = '44:17:93:88:D1:CA'
 WATCH_BT_PORT = 1
 
 class HubBluetooth:
@@ -100,6 +100,22 @@ class HubBluetooth:
                     self.sock.send('c')
                     print("Reminder has been sent to the Watch about the attempt of the synchronization.")
 
+    def send_package(self, pkg: outbound_package.SendPackage):
+        """Sends a SendPackage (RTC, weight, height) to the Watch."""
+        if not self.connected:
+            print("WARNING: Cannot send, not connected to Watch.")
+            return
+        try:
+            message = f"{pkg.RTC};{pkg.weight};{pkg.height}\n"
+            self.sock.send(message.encode('utf-8'))
+            ack = self.sock.recv(1)
+            if ack != b'r':
+                print(f"WARNING: Unexpected acknowledgment: {ack}")
+        except bluetooth.btcommon.BluetoothError as e:
+            print(f"Bluetooth error while sending: {e}")
+            self.connected = False
+            self.sock.close()
+    
     @staticmethod
     def messages_to_sessions(messages: list[bytes]) -> list[hike.HikeSession]:
         """Transforms multiple incoming messages to a list of hike.HikeSession objects.
@@ -138,19 +154,22 @@ class HubBluetooth:
 
         # filtering because we might have a semi-column at the end of the message, right before the new-line character
         parts = list(filter(lambda p: len(p) > 0, m.split(';')))
-        assert len(parts) >= 3, f"MessageProcessingError -> The incoming message doesn't contain enough information: {m}"
+        assert len(parts) >= 6, f"MessageProcessingError -> The incoming message doesn't contain enough information: {m}"
 
         hs = hike.HikeSession()
-        hs.id     = int(parts[0])
-        hs.steps  = int(parts[1])
-        hs.km     = float(parts[2])
+        hs.id         = int(parts[0])
+        hs.steps      = int(parts[1])
+        hs.km         = float(parts[2])
+        hs.duration   = str(parts[3])  
+        hs.date       = str(parts[4]) 
+        hs.start_time = str(parts[5])  
 
         def cvt_coord(c):
             sc = c.split(',')
-            assert len(sc) == 2, f"MessageProcessingError -> Unable to process coordinate: {c}"
-            return float(sc[0]), float(sc[1])
+            assert len(sc) == 3, f"MessageProcessingError -> Unable to process coordinate: {c}"
+            return float(sc[0]), float(sc[1]), float(sc[2]) 
 
-        if len(parts) > 3:
-            hs.coords = map(cvt_coord, parts[3:])
+        if len(parts) > 6:
+            hs.coords = list(map(cvt_coord, parts[6:]))
 
         return hs

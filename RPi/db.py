@@ -1,5 +1,5 @@
 import sqlite3
-
+from typing import List
 import hike
 import threading
 
@@ -9,9 +9,32 @@ DB_SESSION_TABLE = {
     "name": "sessions",
     "cols": [
         "session_id integer PRIMARY KEY",
-        "km integer",
+        "km REAL",
         "steps integer",
         "burnt_kcal integer",
+        "date integer",
+        "start_time integer",
+        "duration integer"
+    ]
+}
+DB_GPS_TABLE = {
+    "name": "gps_points",
+    "cols": [
+        "id INTEGER PRIMARY KEY AUTOINCREMENT",
+        "session_id INTEGER",
+        "lat REAL",
+        "lon REAL",
+        "alt REAL",
+        "FOREIGN KEY (session_id) REFERENCES sessions(session_id)"
+    ]
+}
+
+DB_METRICS_TABLE = {
+    "name": "personal_metrics",
+    "cols": [
+        "id INTEGER PRIMARY KEY",
+        "weight INTEGER",
+        "height INTEGER",
     ]
 }
 
@@ -39,7 +62,7 @@ class HubDatabase:
         self.con = sqlite3.connect(DB_FILE_NAME, check_same_thread=False)
         self.cur = self.con.cursor()
 
-        for t in (DB_SESSION_TABLE):
+        for t in (DB_SESSION_TABLE, DB_GPS_TABLE, DB_METRICS_TABLE):
             create_table_sql = f"create table if not exists {t['name']} ({', '.join(t['cols'])})"
             self.cur.execute(create_table_sql)
 
@@ -57,7 +80,11 @@ class HubDatabase:
             self.lock.acquire()
 
             try:
-                self.cur.execute(f"INSERT INTO {DB_SESSION_TABLE['name']} VALUES ({s.id}, {s.km}, {s.steps}, {s.kcal})")
+                self.cur.execute(
+                    f"INSERT INTO {DB_SESSION_TABLE['name']} VALUES (?, ?, ?, ?, ?, ?, ?)", (s.id, s.km, s.steps, s.kcal, s.date, s.start_time, s.duration))
+                for lat, lon, alt in s.coords:
+                    self.cur.execute(
+                        f"INSERT INTO {DB_GPS_TABLE['name']} (session_id, lat, lon, alt) VALUES (?, ?, ?, ?)",(s.id, lat, lon, alt))         
             except sqlite3.IntegrityError:
                 print("WARNING: Session ID already exists in database! Aborting saving current session.")
 
@@ -66,16 +93,34 @@ class HubDatabase:
         finally:
             self.lock.release()
 
-    def delete(self, session_id: int):
+    def save_metrics(self, weight: int, height: int):
         try:
             self.lock.acquire()
-
-            self.cur.execute(f"DELETE FROM {DB_SESSION_TABLE['name']} WHERE session_id = {session_id}")
+            self.cur.execute(
+                f"INSERT OR REPLACE INTO {DB_METRICS_TABLE['name']} (id, weight, height) VALUES (1, ?, ?)", (weight, height))
             self.con.commit()
         finally:
             self.lock.release()
 
-    def get_sessions(self) -> list[hike.HikeSession]:
+    def get_metrics(self):
+        try:
+            self.lock.acquire()
+            row = self.cur.execute(
+                f"SELECT weight, height FROM {DB_METRICS_TABLE['name']} WHERE id = 1").fetchone()
+        finally:
+            self.lock.release()
+        return row 
+
+    def delete(self, session_id: int):
+        try:
+            self.lock.acquire()
+            self.cur.execute(f"DELETE FROM {DB_SESSION_TABLE['name']} WHERE session_id = ?", (session_id,))
+            self.cur.execute(f"DELETE FROM {DB_GPS_TABLE['name']} WHERE session_id = ?", (session_id,))
+            self.con.commit()
+        finally:
+            self.lock.release()
+
+    def get_sessions(self) -> List[hike.HikeSession]:
         try:
             self.lock.acquire()
             rows = self.cur.execute(f"SELECT * FROM {DB_SESSION_TABLE['name']}").fetchall()
@@ -87,7 +132,8 @@ class HubDatabase:
     def get_session(self, session_id: int) -> hike.HikeSession:
         try:
             self.lock.acquire()
-            rows = self.cur.execute(f"SELECT * FROM {DB_SESSION_TABLE['name']} WHERE session_id = {session_id}").fetchall()
+            rows = self.cur.execute(f"SELECT * FROM {DB_SESSION_TABLE['name']} WHERE session_id = ?", (session_id,)).fetchall()
+
         finally:
             self.lock.release()
 

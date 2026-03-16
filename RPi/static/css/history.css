@@ -1,0 +1,38 @@
+body{
+    font-family: "Oswald", sans-serif;
+    color: #1f1f1f;
+    background: white;
+    font-size: 2vh;
+}
+
+h1{
+    position: relative;
+    margin-left: 5vh;
+    margin-top: 5vh;
+    font-size: 2.0vh;
+}
+
+.history-table{
+    width: 95%;
+    margin-left: 5vh;
+    margin-right: 5vh;
+    border-collapse: collapse;
+}
+
+.history-table .header{
+    background: #9AAFC0;
+}
+
+.history-table th,
+.history-table td{
+    padding: 14px;
+    text-align: left;
+}
+
+.history-table tr{
+    border-bottom: 2px solid #9AAFC0;
+}
+
+.history-table td{
+    height: 25px;
+}

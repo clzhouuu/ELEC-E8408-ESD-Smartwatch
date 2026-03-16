@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="/static/css/history.css">
+        <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Oswald&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <h1>Session History</h1>
+        <table class="history-table">
+            <tr class="header">
+                <th>ID</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Duration</th>
+                <th>Steps</th>
+                <th>Distance (km)</th>
+                <th>Calories</th>
+            {% for s in sessions %}
+            </tr>
+                <td>{{ s.id }}</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>{{ s.steps }}</td>
+                <td>{{ s.km }}</td>
+                <td>{{ s.kcal }}</td>
+            </tr>
+            {% endfor %}
+            {% for i in range(12 - sessions|length) %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
