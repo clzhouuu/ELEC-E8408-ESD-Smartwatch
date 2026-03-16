@@ -45,6 +45,8 @@ String sessionStartTime = "";
 String sessionEndTime = "";
 unsigned long sessionStartMs = 0;
 unsigned long sessionDurationMs = 0;
+String durationStr = "";
+
 
 // calorie estimation variables
 uint32_t MET = 6;
@@ -57,6 +59,7 @@ bool sessionSent = false;
 struct GpsPoint {
     double lat;
     double lon;
+    double alt;
     unsigned long ms;
 };
 
@@ -144,9 +147,10 @@ void sendSessionBT()
     // Sending distance
     sendDataBT(LITTLEFS, "/distance.txt");
     SerialBT.write(';');
+    // Sending date and time
+    sendDataBT(LITTLEFS, "/datetime.txt");
     // Sending GPS
     sendDataBT(LITTLEFS, "/coord.txt");
-    // Send connection termination char
     SerialBT.write('\n');
 }
 
@@ -171,11 +175,18 @@ void saveDistanceToFile(float distance)
     writeFile(LITTLEFS, "/distance.txt", buffer);
 }
 
+void saveDateTimeToFile(const String &dur, const String &startTime, const String &startDate)
+{
+    String content = dur + ";" + startDate + ";" + startTime;
+    writeFile(LITTLEFS, "/datetime.txt", content.c_str());
+}
+
 void deleteSession()
 {
     deleteFile(LITTLEFS, "/id.txt");
     deleteFile(LITTLEFS, "/distance.txt");
     deleteFile(LITTLEFS, "/steps.txt");
+    deleteFile(LITTLEFS, "/datetime.txt");
     deleteFile(LITTLEFS, "/coord.txt");
 }
 
@@ -193,6 +204,7 @@ void logGps() {
         gpsPoints[gpsPointCount++] = {
             gps->location.lat(),
             gps->location.lng(),
+            gps->altitude.meters(),
             millis() - sessionStartMs
         };
     }
@@ -214,6 +226,12 @@ void saveGpsPointsToFile() {
     }
     file.close();
 }
+
+String twoDigits(int n) {
+    if (n < 10) return "0" + String(n);
+    return String(n);
+}
+
 
 void setup()
 {
@@ -428,17 +446,12 @@ void loop()
                 unsigned long minutes = (totalSeconds % 3600) / 60;
                 unsigned long hours = totalSeconds / 3600;
 
+                durationStr = String(twoDigits(hours)) + ":" + String(twoDigits(minutes)) + ":" + String(twoDigits(seconds));
+
                 watch->tft->fillRect(130, 140, 90, 16, TFT_BLACK);
                 watch->tft->setCursor(130, 140);
 
-                if (hours < 10) watch->tft->print("0");
-                watch->tft->print(hours);
-                watch->tft->print(":");
-                if (minutes < 10) watch->tft->print("0");
-                watch->tft->print(minutes);
-                watch->tft->print(":");
-                if (seconds < 10) watch->tft->print("0");
-                watch->tft->print(seconds);
+                watch->tft->print(durationStr);
             }
 
             if (irqBMA) {
@@ -509,6 +522,7 @@ void loop()
         saveIdToFile(sessionId);
         saveStepsToFile(currentSteps);
         saveDistanceToFile(distance_m / 1000.0f);
+        saveateTimeToFile(durationStr, sessionStartTime, sessionStartDate);
 
         sessionStored = true;
         sessionSent = false;
