@@ -14,7 +14,9 @@
             <div class="square"></div>
             <img src="/static/images/lilygo-logo.png" class="lilygo-logo">
             <h1 class="total">{{ sessions | sum(attribute='km') | round(1) }} KM</h1>
-            <i class="fa-brands fa-bluetooth"></i> 
+            <div class="bt-icon-wrapper {% if not bt_connected %}disconnected{% endif %}">
+                <i class="fa-brands fa-bluetooth"></i>
+            </div>
         </div>
         <div class="text">
             <img src="/static/images/Huippu.png" class="Huippu">

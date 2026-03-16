@@ -59,7 +59,7 @@ html, body {
     transform: scaleY(1.8);
 }
 
-.fa-bluetooth{
+.bt-icon-wrapper{
     position: absolute;
     top: 62%;
     left: 22%;
@@ -67,6 +67,19 @@ html, body {
     font-size :4vh;
     color:#9AAFC0;
 }
+
+
+.bt-icon-wrapper.disconnected::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 130%;
+    height: 3px;
+    background-color: #9AAFC0;
+}
+
 
 .text{
     position: absolute;
