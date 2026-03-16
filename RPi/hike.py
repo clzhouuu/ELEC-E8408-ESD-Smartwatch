@@ -1,6 +1,9 @@
 MET_HIKING = 6
 KCAL_PER_STEP = 0.04
 
+USER_HEIGHT = 170
+USER_WEIGHT = 70
+
 class HikeSession:
     id = 0
     km = 0

@@ -3,20 +3,19 @@ from flask import render_template
 from flask import jsonify
 from flask import Response
 from flask import request
+import outbound_package
 
 import db
 import hike
-import os
-import json
+from receiver import hubbt
 
 app = Flask(__name__)
 hdb = db.HubDatabase()
 
-with open("settings.json") as f: 
-    settings = json.load(f) 
-    
-hike.USER_HEIGHT = settings["height"] 
-hike.USER_WEIGHT = settings["weight"]
+metrics = hdb.get_metrics()
+if metrics:
+    hike.USER_WEIGHT = metrics[0]
+    hike.USER_HEIGHT = metrics[1] 
 
 @app.route('/')
 def get_home():
@@ -60,24 +59,17 @@ def get_settings():
 
 @app.route('/save-settings', methods=['POST'])
 def save_settings():
-
     data = request.get_json()
-
     height = int(data['height'])
     weight = int(data['weight'])
 
     hike.USER_HEIGHT = height
     hike.USER_WEIGHT = weight
 
-    settings = {
-        "height": height,
-        "weight": weight
-    }
+    hdb.save_metrics(weight, height)    
+    hubbt.send_package(outbound_package.load_metrics(hdb))
 
-    with open("settings.json", "w") as f:
-        json.dump(settings, f)
-
-    return jsonify(settings)
+    return jsonify({"height": height, "weight": weight})
 
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)
