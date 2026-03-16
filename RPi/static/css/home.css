@@ -48,15 +48,20 @@ html, body {
 }
 .total{
     position: absolute;
-    top: 38%;
-    left: 19%;
+    top: 41%;
+    left: 32%;
     transform: translate(-50%, -50%);
-    width: 13vhw;
-    height: 12vh;
+    width: 12vw;
+    height: 10.5vh;
     color: #9AAFC0;
-    font-size: 5.5vh;
     font-family: 'Oswald', sans-serif;
-    transform: scaleY(1.8);
+    align-items:center;
+    justify-content:center;
+    line-height: 10.5vh;
+    text-align:center;
+    overflow: hidden;
+    white-space: nowrap;
+
 }
 
 .bt-icon-wrapper{

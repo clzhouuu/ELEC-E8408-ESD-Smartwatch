@@ -13,7 +13,7 @@
             <img src="/static/images/LilyGo.png" class="LilyGo">
             <div class="square"></div>
             <img src="/static/images/lilygo-logo.png" class="lilygo-logo">
-            <h1 class="total">{{ sessions | sum(attribute='km') | round(1) }} KM</h1>
+            <h1 class="total">{{ sessions | sum(attribute='km') | int }} KM</h1>
             <div class="bt-icon-wrapper {% if not bt_connected %}disconnected{% endif %}">
                 <i class="fa-brands fa-bluetooth"></i>
             </div>
@@ -78,6 +78,19 @@
                 }
             });
         });
+        
+        function fitText(el) {
+            el.style.fontSize = '100px';
+            const scale = el.clientWidth / el.scrollWidth;
+            el.style.fontSize = `${100 * scale}px`;
+        }
+
+        document.fonts.ready.then(() => {
+            const totalEl = document.querySelector('.total');
+            if (totalEl) fitText(totalEl);
+        });
+        
+        
         function checkIfChanged() {
             const changed =
                 heightInput.value != originalHeight ||
