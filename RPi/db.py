@@ -12,6 +12,8 @@ DB_SESSION_TABLE = {
         "km REAL",
         "steps integer",
         "burnt_kcal integer",
+        "start_time integer",
+        "duration integer"
     ]
 }
 DB_GPS_TABLE = {
