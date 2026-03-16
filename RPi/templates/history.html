@@ -15,20 +15,28 @@
                 <th>Steps</th>
                 <th>Distance (km)</th>
                 <th>Calories</th>
+            {% for s in sessions %}
             </tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-
+                <td>{{ s.id }}</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>{{ s.steps }}</td>
+                <td>{{ s.km }}</td>
+                <td>{{ s.kcal }}</td>
+            </tr>
+            {% endfor %}
+            {% for i in range(12 - sessions|length) %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endfor %}
         </table>
     </body>
 </html>

@@ -13,7 +13,7 @@
             <img src="/static/images/LilyGo.png" class="LilyGo">
             <div class="square"></div>
             <img src="/static/images/lilygo-logo.png" class="lilygo-logo">
-            <h1 class="total">54 KM</h1>
+            <h1 class="total">{{ sessions | sum(attribute='km') | round(1) }} KM</h1>
             <i class="fa-brands fa-bluetooth"></i> 
         </div>
         <div class="text">
