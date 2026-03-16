@@ -29,8 +29,8 @@ volatile bool irqBMA = false;
 volatile bool irqButton = false;
 
 // input variables
-float height = 1.65;
-float weight = 50.0f;
+float height = 1.70; // average weight and height
+float weight = 75.0f;
 
 // distance calculation variables
 uint32_t steps = 0;
@@ -293,6 +293,7 @@ void loop()
                     while(1)
                     {
                         updateTimeout = millis();
+                        
                         if (SerialBT.available())
                             incomingChar = SerialBT.read();
                         if (incomingChar == 'r')
@@ -358,8 +359,8 @@ void loop()
 
         // Reset GPS state for new session
         deleteFile(LITTLEFS, "/coord.txt");
-        gpsPointCount   = 0;
-        lastGpsSave     = 0;
+        gpsPointCount = 0;
+        lastGpsSave = 0;
         lastGpsFileSave = 0;
 
         state = 3;
@@ -386,7 +387,7 @@ void loop()
         // Initial display
         watch->tft->drawString("Steps:",    20, 50, 2);
         watch->tft->drawString("Dist:",     20, 80, 2);
-        watch->tft->drawString("Calories:", 20, 110, 2);
+        watch->tft->drawString("Av calories:", 20, 110, 2);
         watch->tft->drawString("Duration:", 20, 140, 2);
         watch->tft->drawString("Battery:",  20, 170, 2);
 
