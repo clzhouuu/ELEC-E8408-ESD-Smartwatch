@@ -47,20 +47,19 @@ html, body {
     height: 4vh;
 }
 .total{
+    
     position: absolute;
-    top: 41%;
+    top: 48%;
     left: 32%;
-    transform: translate(-50%, -50%);
-    width: 12vw;
-    height: 10.5vh;
+    transform: translate(-50%, -50%) scaleY(1.5);
+    width: 11.5vw;
+    height: 10vh;
     color: #9AAFC0;
     font-family: 'Oswald', sans-serif;
-    align-items:center;
-    justify-content:center;
-    line-height: 10.5vh;
-    text-align:center;
     overflow: hidden;
     white-space: nowrap;
+    margin: 0;
+    padding: 0;
 
 }
 

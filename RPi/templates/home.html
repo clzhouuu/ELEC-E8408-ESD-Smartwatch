@@ -80,9 +80,9 @@
         });
         
         function fitText(el) {
-            el.style.fontSize = '100px';
+            el.style.fontSize = '200px'; 
             const scale = el.clientWidth / el.scrollWidth;
-            el.style.fontSize = `${100 * scale}px`;
+            el.style.fontSize = `${200 * scale}px`;
         }
 
         document.fonts.ready.then(() => {
