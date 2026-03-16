@@ -3,7 +3,7 @@ import time
 import outbound_package
 import hike
 
-WATCH_BT_MAC = 'XX:XX:XX:XX:XX:XX'
+WATCH_BT_MAC = '44:17:93:88:D1:CA'
 WATCH_BT_PORT = 1
 
 class HubBluetooth:
