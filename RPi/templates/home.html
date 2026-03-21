@@ -87,7 +87,9 @@
 
         document.fonts.ready.then(() => {
             const totalEl = document.querySelector('.total');
-            if (totalEl) fitText(totalEl);
+            if (totalEl) {
+                fitText(totalEl);
+            }
         });
         
         

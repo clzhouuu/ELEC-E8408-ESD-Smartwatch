@@ -46,21 +46,20 @@ html, body {
     width: 13vh;
     height: 4vh;
 }
-.total{
-    
+
+.total {
     position: absolute;
     top: 48%;
-    left: 32%;
+    left: 31.5%;
     transform: translate(-50%, -50%) scaleY(1.5);
-    width: 11.5vw;
-    height: 10vh;
+    width: 15.0vw;
+    text-align: center;
     color: #9AAFC0;
     font-family: 'Oswald', sans-serif;
-    overflow: hidden;
     white-space: nowrap;
     margin: 0;
     padding: 0;
-
+    overflow: hidden;
 }
 
 .bt-icon-wrapper{
