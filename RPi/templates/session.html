@@ -21,7 +21,7 @@
             <text class="step">Stepcount: {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
             <text class="distance">Travelled Distance: {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
             <text class="calories">Burned Calories: {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
-            <text class="time">Duration: -</text>
+            <text class="time">Duration: {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
         </info>
     </body>
 </html>
