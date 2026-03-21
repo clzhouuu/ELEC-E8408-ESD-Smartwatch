@@ -1,3 +1,4 @@
+#pragma once
 #include "FS.h"
 #include <LittleFS.h>
 #define LITTLEFS LittleFS

@@ -101,12 +101,12 @@ class HubBluetooth:
                     print("Reminder has been sent to the Watch about the attempt of the synchronization.")
 
     def send_package(self, pkg: outbound_package.SendPackage):
-        """Sends a SendPackage (RTC, weight, height) to the Watch."""
+        """Sends a SendPackage (weight, height) to the Watch."""
         if not self.connected:
             print("WARNING: Cannot send, not connected to Watch.")
             return
         try:
-            message = f"{pkg.RTC};{pkg.weight};{pkg.height}\n"
+            message = f"CONFIG,{pkg.weight},{pkg.height}\n"
             self.sock.send(message.encode('utf-8'))
             ack = self.sock.recv(1)
             if ack != b'r':

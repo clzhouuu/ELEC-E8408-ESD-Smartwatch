@@ -1,4 +1,12 @@
 #include "config.h"
+#include "image.c"
+#include "globals.h"
+#include "bluetooth.h"
+#include "power.h"
+#include "gps.h"
+#include "saveFile.h"
+#include "screens.h"
+
 using fs::File;
 
 // Check if Bluetooth configs are enabled
@@ -6,38 +14,25 @@ using fs::File;
 #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
-// Bluetooth Serial object
-BluetoothSerial SerialBT;
-
-// Watch objects
+// global definitions
 TTGOClass *watch;
-TFT_eSPI *tft;
 BMA *sensor;
 PCF8563_Class *rtc;
-TinyGPSPlus *gps;          // GPS added
+TinyGPSPlus *gps;
+BluetoothSerial SerialBT;
 
-// Global variables for batteryState
-int batteryPercent = 0;
-unsigned long batteryTimer = 0;
-
-uint32_t sessionId = 30;
-unsigned long last = 0;
-unsigned long updateTimeout = 0;
-
-volatile uint8_t state;
-volatile bool irqBMA = false;
-volatile bool irqButton = false;
+uint32_t sessionId = 0; 
+#define SLEEP_TIMEOUT_MS 30000
 
 // input variables
-float height = 1.70; // average weight and height
+float height = 1.70f; // average weight and height
 float weight = 75.0f;
 
 // distance calculation variables
-uint32_t steps = 0;
-uint32_t lastStep = 0;
 uint32_t currentSteps = 0;
+uint32_t lastStep = 0;
 float distance_m = 0.0f;
-const float stride = 0.43 * height;
+float stride = 0.43f * height;
 
 // time variables
 String sessionStartDate = "";
@@ -47,414 +42,189 @@ unsigned long sessionStartMs = 0;
 unsigned long sessionDurationMs = 0;
 String durationStr = "";
 
-
 // calorie estimation variables
-uint32_t MET = 6;
+const float MET = 6;
 uint32_t caloriesBurned = 0;
+const float KCAL_PER_STEP = 0.04;
 
+// state machine
+volatile uint8_t state = 1;
+
+// interrupts
+volatile bool irqBMA = false;
+volatile bool irqButton = false;
+volatile bool irqButtonLong = false;
+
+// battery
+int batteryPercent = 0;
+bool s_isCharging = false;
+unsigned long batteryTimer = 0;
+
+// sleep
+bool screenAsleep = false;
+unsigned long lastActivity = 0;
+
+// session sync
 bool sessionStored = false;
 bool sessionSent = false;
 
-// GPS variables
-struct GpsPoint {
-    double lat;
-    double lon;
-    double alt;
-};
-
-const int MAX_GPS_POINTS = 500;
 GpsPoint gpsPoints[MAX_GPS_POINTS];
 int gpsPointCount = 0;
-unsigned long lastGpsSave = 0;      // throttles point capture (every 3s)
-unsigned long lastGpsFileSave = 0;  // throttles file write (every 15s)
+unsigned long lastGpsSave = 0;
+unsigned long lastGpsFileSave = 0;
+bool rtcSynced = false;
 
-void initHikeWatch()
-{
-    // LittleFS
-    if(!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
-        Serial.println("LITTLEFS Mount Failed");
-        return;
-    }
-    
-    // ------Stepcounter---------
-    // Configure IMU
-    Acfg cfg;
-    cfg.odr = BMA4_OUTPUT_DATA_RATE_100HZ;
-    cfg.range = BMA4_ACCEL_RANGE_2G;
-    cfg.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
-    cfg.perf_mode = BMA4_CONTINUOUS_MODE;
-
-    sensor->accelConfig(cfg);
-    sensor->enableAccel(); 
-
-    // Enable BMA423 step count feature
-    sensor->enableFeature(BMA423_STEP_CNTR, true);
-
-    // Reset steps
-    sensor->resetStepCounter();
-
-    // Turn on step interrupt
-    sensor->enableStepCountInterrupt();
-
-    // BMA interrupt
-    pinMode(BMA423_INT1, INPUT);
-    attachInterrupt(BMA423_INT1, [] { 
-        irqBMA = true; 
-    }, RISING);
-
-    // Side button
-    pinMode(AXP202_INT, INPUT_PULLUP);
-    attachInterrupt(AXP202_INT, [] {
-        irqButton = true;
-    }, FALLING);
-
-    //!Clear IRQ unprocessed first
-    watch->power->enableIRQ(AXP202_PEK_SHORTPRESS_IRQ, true);
-    watch->power->clearIRQ();
-
-    return;
-}
-
-void sendDataBT(fs::FS &fs, const char * path)
-{
-    /* Sends data via SerialBT */
-    fs::File file = fs.open(path);
-    if(!file || file.isDirectory()){
-        Serial.println("- failed to open file for reading");
-        return;
-    }
-    Serial.println("- read from file:");
-    while(file.available()){
-        SerialBT.write(file.read());
-    }
-    file.close();
-}
-
-void sendSessionBT()
-{
-    // Read session and send it via SerialBT
-    watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-    watch->tft->drawString("Sending session", 20, 80);
-    watch->tft->drawString("to Hub", 80, 110);
-
-    // Sending session id
-    sendDataBT(LITTLEFS, "/id.txt");
-    SerialBT.write(';');
-    // Sending steps
-    sendDataBT(LITTLEFS, "/steps.txt");
-    SerialBT.write(';');
-    // Sending distance
-    sendDataBT(LITTLEFS, "/distance.txt");
-    SerialBT.write(';');
-    // Sending date and time
-    sendDataBT(LITTLEFS, "/datetime.txt");
-    // Sending GPS
-    sendDataBT(LITTLEFS, "/coord.txt");
-    SerialBT.write('\n');
-}
-
-void saveIdToFile(uint16_t id)
-{
-    char buffer[10];
-    itoa(id, buffer, 10);
-    writeFile(LITTLEFS, "/id.txt", buffer);
-}
-
-void saveStepsToFile(uint32_t step_count)
-{
-    char buffer[10];
-    itoa(step_count, buffer, 10);
-    writeFile(LITTLEFS, "/steps.txt", buffer);
-}
-
-void saveDistanceToFile(float distance)
-{
-    char buffer[16];
-    dtostrf(distance, 6, 3, buffer);
-    writeFile(LITTLEFS, "/distance.txt", buffer);
-}
-
-void saveDateTimeToFile(const String &dur, const String &startTime, const String &startDate)
-{
-    String content = dur + ";" + startDate + ";" + startTime;
-    writeFile(LITTLEFS, "/datetime.txt", content.c_str());
-}
-
-void deleteSession()
-{
-    deleteFile(LITTLEFS, "/id.txt");
-    deleteFile(LITTLEFS, "/distance.txt");
-    deleteFile(LITTLEFS, "/steps.txt");
-    deleteFile(LITTLEFS, "/datetime.txt");
-    deleteFile(LITTLEFS, "/coord.txt");
-}
-
-// GPS - log a point every 3 seconds if valid fix
-void logGps() {
-    watch->gpsHandler();
-
-    if (!gps) return;
-    if (!gps->location.isValid() || !gps->location.isUpdated()) return;
-    if (millis() - lastGpsSave < 3000) return;
-
-    lastGpsSave = millis();
-
-    if (gpsPointCount < MAX_GPS_POINTS) {
-        gpsPoints[gpsPointCount++] = {
-            gps->location.lat(),
-            gps->location.lng(),
-            gps->altitude.meters(),
-        };
-    }
-}
-
-// GPS - write all captured points to file
-void saveGpsPointsToFile() {
-    File file = LITTLEFS.open("/coord.txt", FILE_WRITE);
-    if (!file) {
-        Serial.println("Failed to open /coord.txt");
-        return;
-    }
-    for (int i = 0; i < gpsPointCount; i++) {
-        file.print(gpsPoints[i].lat, 6);
-        file.print(";");
-        file.print(gpsPoints[i].lon, 6);
-        file.print(";");
-        file.print(gpsPoints[i].alt, 1);
-        file.print(";");
-    }
-    file.close();
-}
-
-String twoDigits(int n) {
-    if (n < 10) return "0" + String(n);
-    return String(n);
-}
-
-
-void setup()
-{
+// setup
+void setup() {
     Serial.begin(115200);
     watch = TTGOClass::getWatch();
     watch->begin();
+    watch->lvgl_begin();
     watch->openBL();
 
-    //Receive objects for easy writing
-    tft = watch->tft;
     sensor = watch->bma;
     rtc = watch->rtc;
-
     rtc->check();
 
-    // GPS
     watch->trunOnGPS();
     watch->gps_begin();
     gps = watch->gps;
 
     initHikeWatch();
 
-    state = 3;
+    buildIdleScreen();
+    buildHikeScreen();
+    buildSavingScreen();
+    buildSyncScreen();
 
+    state = 1;
+    lastActivity = millis(); 
     SerialBT.begin("Hiking Watch");
-    Serial.println("Bluetooth started"); //show indication
+    Serial.println("Bluetooth started");
 }
 
-void drawTime(){
-    static unsigned long lastUpdate = 0;
+// loop
+void loop() {
+    lv_task_handler();
 
-    if (millis() - lastUpdate > 1000) {
-        lastUpdate = millis();
-        watch->tft->fillRect(170, 5, 70, 20, TFT_BLACK); 
-        watch->tft->drawString(rtc->formatDateTime(PCF_TIMEFORMAT_HM), 170, 5);
-    }
-}
-
-void loop()
-{
-    drawTime();
-    
-    switch (state)
-    {
-    
-    // case 1: // idle state in FSM diagram
-    // {
-    //     /* Initial stage */
-    //     //Basic interface
-    //     watch->tft->fillScreen(TFT_BLACK);
-    //     watch->tft->setTextFont(4);
-    //     watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-    //     watch->tft->drawString("Hiking Watch",  45, 25, 4);
-    //     watch->tft->drawString("Press button", 50, 80);
-    //     watch->tft->drawString("to start session", 40, 110);
-
-    //     bool exitSync = false;
-
-    //     //Bluetooth discovery
-    //     while (1)
-    //     {
-    //         /* Bluetooth sync */
-    //         if (SerialBT.available())
-    //         {
-    //             char incomingChar = SerialBT.read();
-    //             if (incomingChar == 'c' and sessionStored and not sessionSent)
-    //             {
-    //                 sendSessionBT();
-    //                 sessionSent = true;
-    //             }
-
-    //             if (sessionSent && sessionStored) {
-    //                 // Update timeout before blocking while
-    //                 updateTimeout = 0;
-    //                 last = millis();
-    //                 while(1)
-    //                 {
-    //                     updateTimeout = millis();
-
-    //                     if (SerialBT.available())
-    //                         incomingChar = SerialBT.read();
-    //                     if (incomingChar == 'r')
-    //                     {
-    //                         Serial.println("Got an R");
-    //                         // Delete session
-    //                         deleteSession();
-    //                         sessionStored = false;
-    //                         sessionSent = false;
-    //                         incomingChar = 'q';
-    //                         exitSync = true;
-    //                         break;
-    //                     }
-    //                     else if ((millis() - updateTimeout > 2000))
-    //                     {
-    //                         Serial.println("Waiting for timeout to expire");
-    //                         updateTimeout = millis();
-    //                         sessionSent = false;
-    //                         exitSync = true;
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         if (exitSync)
-    //         {
-    //             delay(1000);
-    //             watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-    //             watch->tft->drawString("Hiking Watch",  45, 25, 4);
-    //             watch->tft->drawString("Press button", 50, 80);
-    //             watch->tft->drawString("to start session", 40, 110);
-    //             exitSync = false;
-    //         }
-
-    //         /*      IRQ     */
-    //         if (irqButton) {
-    //             irqButton = false;
-    //             watch->power->readIRQ();
-    //             if (state == 1)
-    //             {
-    //                 state = 2;
-    //             }
-    //             watch->power->clearIRQ();
-    //         }
-    //         if (state == 2) {
-    //             if (sessionStored)
-    //             {
-    //                 watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-    //                 watch->tft->drawString("Overwriting",  55, 100, 4);
-    //                 watch->tft->drawString("session", 70, 130);
-    //                 delay(1000);
-    //             }
-    //             break;
-    //         }
-    //     }
-    //     break;
-    // }
-    
+    switch (state) {
     case 1:
     {
-        drawTime();
-
         /* Initial stage */
-        //Basic interface
-        watch->tft->fillScreen(TFT_BLACK);
-        watch->tft->setTextFont(4);
-        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-        watch->tft->drawString("Hiking Watch",  45, 25, 4);
-        watch->tft->drawString("Press button", 50, 80);
-        watch->tft->drawString("to start session", 40, 110);
+        lv_scr_load(scr_idle);
+        lv_label_set_text(lbl_idle_bigtime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
+        lv_label_set_text(lbl_idle_batt_icon, battIcon());
+        lv_label_set_text(lbl_idle_batt_pct, battPctStr().c_str());
 
-        // variable initiation
-        bool exitSync = false;
+        if (sessionStored) {
+            lv_label_set_text(lbl_idle_btstate, "Session stored");
+        } else {
+            lv_label_set_text(lbl_idle_btstate, "No session data");
+        }
 
-        // Bluetooth discovery
-        while (1)
+        lv_task_handler();
+        
+        
+        //Bluetooth discovery
+        while (1) 
         {
-            /* Bluetooth sync */
-            if (SerialBT.available())
-            {
-                char incomingChar = SerialBT.read();
-                if (incomingChar == 'c' and sessionStored and not sessionSent)
-                {
-                    sendSessionBT();
-                    sessionSent = true;
-                }
-                if (sessionSent && sessionStored) {
-                    // Update timeout before blocking while
-                    updateTimeout = 0;
-                    last = millis();
-                    while(1)
-                    {
-                        updateTimeout = millis();
-                        
-                        if (SerialBT.available())
-                            incomingChar = SerialBT.read();
-                        if (incomingChar == 'r')
-                        {
-                            Serial.println("Got an R");
-                            // Delete session
-                            deleteSession();
-                            sessionStored = false;
-                            sessionSent = false;
-                            incomingChar = 'q';
-                            exitSync = true;
-                            break;
-                        }
-                        else if ((millis() - updateTimeout > 2000))
-                        {
-                            Serial.println("Waiting for timeout to expire");
-                            updateTimeout = millis();
-                            sessionSent = false;
-                            exitSync = true;
-                            break;
-                        }
-                    }
-                }
+            lv_task_handler();
+            if (gps) {
+                watch->gpsHandler();
             }
-            if (exitSync)
-            {
-                delay(1000);
-                watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-                watch->tft->drawString("Hiking Watch",  45, 25, 4);
-                watch->tft->drawString("Press button", 50, 80);
-                watch->tft->drawString("to start session", 40, 110);
-                exitSync = false;
+
+            // if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
+            //     screenSleep();
+            // }
+
+            static unsigned long lastTick = 0;
+            if (millis() - lastTick > 1000) {
+                lastTick = millis();
+                readBattery();
+                lv_label_set_text(lbl_idle_bigtime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
+                lv_label_set_text(lbl_idle_batt_icon, battIcon());
+                lv_label_set_text(lbl_idle_batt_pct, battPctStr().c_str());
+                lv_label_set_text(lbl_idle_charge_icon, chargeIcon());
+
+                setBtIconColor(lbl_idle_bt_icon);
+                setGpsIconColor(lbl_idle_gps_icon);
+            }
+
+            /* Bluetooth sync */
+            if (SerialBT.available()) {
+                int msg = SerialBT.peek();
+                if (msg == 'c') {
+                    BTsync();
+                } else {
+                    receiveBTConfig();
+                }
             }
 
             /*      IRQ     */
             if (irqButton) {
                 irqButton = false;
                 watch->power->readIRQ();
-                if (state == 1)
-                {
+
+                lastActivity = millis();
+                if (state == 1) {
                     state = 2;
                 }
+
+                // if (watch->power->isPEKLongtPressIRQ()) 
+                // {
+                //     watch->power->clearIRQ();
+                //     shutDown();
+                // } 
+                // else if (watch->power->isPEKShortPressIRQ()) 
+                // {
+                //     if (screenAsleep) 
+                //     {
+                //         screenWake();
+                //     } 
+                //     else 
+                //     {
+                //         lastActivity = millis();
+                        // if (state == 1) {
+                        //     state = 2;
+                        // }
+                //      }
+                // }
+
                 watch->power->clearIRQ();
             }
+
+            if (!rtcSynced && gps && gps->time.isValid() && gps->date.isValid()) {
+                int hour = gps->time.hour() + 2;
+                if (hour >= 24) {
+                    hour -= 24;
+                }
+
+                rtc->setDateTime(
+                    gps->date.year(),
+                    gps->date.month(),
+                    gps->date.day(),
+                    hour,
+                    gps->time.minute(),
+                    gps->time.second()
+                );
+                rtcSynced = true;
+            }
+ 
             if (state == 2) {
-                if (sessionStored)
+                if (sessionStored) 
                 {
-                    watch->tft->fillRect(0, 0, 240, 240, TFT_BLACK);
-                    watch->tft->drawString("Overwriting",  55, 100, 4);
-                    watch->tft->drawString("session", 70, 130);
-                    delay(1000);
+                    lv_obj_t *scr_warn = lv_obj_create(NULL, NULL);
+                    setBackground(scr_warn);
+                    addHuippuLogo(scr_warn);
+                    lv_obj_t *warn_box = makeCard(scr_warn, 15, 40, 210, 160, 16);
+                    makeLabel(warn_box, "CAUTION!", 28, 12, LV_COLOR_BLACK, FONT_HUGE);
+                    makeLabel(warn_box, "UNSYNCED SESSION", 20, 68, LV_COLOR_BLACK, FONT_MEDIUM);
+                    makeLabel(warn_box, "WILL BE", 72, 90, LV_COLOR_BLACK, FONT_MEDIUM);
+                    makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
+                    lv_scr_load(scr_warn);
+                    lv_task_handler();
+                    delay(5000);
+                    lv_obj_del(scr_warn);
                 }
                 break;
             }
@@ -465,9 +235,7 @@ void loop()
     case 2:
     {
         /* Hiking session initialisation */
-        drawTime();
 
-        // Reset GPS state for new session
         deleteFile(LITTLEFS, "/coord.txt");
         gpsPointCount = 0;
         lastGpsSave = 0;
@@ -480,156 +248,194 @@ void loop()
 
     case 3:
     {
-        /* Hiking session ongoing */
-        drawTime();
-
+         /* Hiking session ongoing */
         sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
         sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
         sessionStartMs = millis();
 
-        watch->tft->fillScreen(TFT_BLACK);
-        watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-        watch->tft->setTextFont(2); 
-
-        watch->tft->drawString("Starting hike", 55, 100, 2);
+        lv_obj_t *scr_start = lv_obj_create(NULL, NULL);
+        setBackground(scr_start);
+        makeLabel(scr_start, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
+        makeLabel(scr_start, "Starting hike", 65, 108, LV_COLOR_BLACK, FONT_MEDIUM);
+        lv_scr_load(scr_start);
+        lv_task_handler();
         delay(2000);
-        watch->tft->fillScreen(TFT_BLACK);
+        lv_obj_del(scr_start);
 
-        // Initial display
-        watch->tft->drawString("Steps:",    20, 50, 2);
-        watch->tft->drawString("Dist:",     20, 80, 2);
-        watch->tft->drawString("Av calories:", 20, 110, 2);
-        watch->tft->drawString("Duration:", 20, 140, 2);
-        watch->tft->drawString("Battery:",  20, 170, 2);
+        lv_scr_load(scr_hike);
 
-        //reset step-counter
+        readBattery();
+        lv_label_set_text(lbl_hike_batt_icon, battIcon());
+        lv_label_set_text(lbl_hike_batt_pct, battPctStr().c_str());
+        lv_label_set_text(lbl_hike_charge_icon, chargeIcon());
+
+        // reset display values
+        lv_label_set_text(lbl_steps_val, "0");
+        lv_label_set_text(lbl_dist_val, "0.0km");
+        lv_label_set_text(lbl_kcal_val, "0kcal");
+        lv_label_set_text(lbl_dur_val, "00:00:00");
+        lv_label_set_text(lbl_hike_low_batt, "");
+
+        // reset counters
         sensor->resetStepCounter();
         lastStep = 0;
         distance_m = 0.0f;
         currentSteps = 0;
-        last = millis();
-        updateTimeout = 0;
+        caloriesBurned = 0;
 
-        watch->tft->drawString("0",         130, 50, 2);
-        watch->tft->drawString("0.00 km",   130, 80, 2);
-        watch->tft->drawString("0 kcal",    130, 110, 2);
-        watch->tft->drawString("00:00:00",  130, 140, 2);
-        watch->tft->drawString("0 %",       130, 170, 2);
+        // reset irq
+        irqButton = false;
+        watch->power->readIRQ();
+        watch->power->clearIRQ();
+
+        lastActivity = millis(); 
+        lv_task_handler();
 
         // loop
         while (state == 3) {
+            lv_task_handler();
 
-            // time display
-            drawTime();
+            // if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
+            //     screenSleep();
+            // }
 
-            // GPS - log point and periodically flush to file
+            lv_label_set_text(lbl_hike_toptime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
+
+            // GPS
             logGps();
             if (millis() - lastGpsFileSave > 15000) {
                 lastGpsFileSave = millis();
                 saveGpsPointsToFile();
             }
-        
-            static unsigned long lastDurationUpdate = 0;
-            if (millis() - lastDurationUpdate > 1000) {
-                lastDurationUpdate = millis();
+
+            // duration
+            static unsigned long lastDur = 0;
+            if (millis() - lastDur > 1000) {
+                lastDur = millis();
                 sessionDurationMs = millis() - sessionStartMs;
-
-                unsigned long totalSeconds = sessionDurationMs / 1000;
-                unsigned long seconds = totalSeconds % 60;
-                unsigned long minutes = (totalSeconds % 3600) / 60;
-                unsigned long hours = totalSeconds / 3600;
-
-                durationStr = String(twoDigits(hours)) + ":" + String(twoDigits(minutes)) + ":" + String(twoDigits(seconds));
-
-                watch->tft->fillRect(130, 140, 90, 16, TFT_BLACK);
-                watch->tft->setCursor(130, 140);
-
-                watch->tft->print(durationStr);
+                unsigned long s = sessionDurationMs / 1000;
+                durationStr = twoDigits(s / 3600) + ":" + twoDigits((s % 3600) / 60) + ":" + twoDigits(s % 60);
+                lv_label_set_text(lbl_dur_val, durationStr.c_str());
             }
 
+            // BMA interrupt
             if (irqBMA) {
                 irqBMA = false;
                 sensor->readInterrupt();
                 if (sensor->isStepCounter()) {
-                    // steps
-                    currentSteps = sensor->getCounter(); 
+                    currentSteps = sensor->getCounter();
                     uint32_t delta = currentSteps - lastStep;
                     lastStep = currentSteps;
+                    distance_m += delta * stride;
+                    caloriesBurned = MET * KCAL_PER_STEP * lastStep;
 
-                    // distance
-                    distance_m += delta * stride; 
-                    
-                    // calories
-                    caloriesBurned = (MET * weight * sessionDurationMs) / 3600000;
-
-                    watch->tft->fillRect(130, 50, 80, 16, TFT_BLACK);
-                    watch->tft->drawString(String(currentSteps), 130, 50, 2);
-
-                    watch->tft->fillRect(130, 80, 90, 16, TFT_BLACK);
-                    watch->tft->drawString(String(distance_m / 1000.0f, 2) + " km", 130, 80, 2);
-
-                    watch->tft->fillRect(130, 110, 90, 16, TFT_BLACK);
-                    watch->tft->drawString(String(caloriesBurned) + " kcal", 130, 110, 2);
+                    lv_label_set_text_fmt(lbl_steps_val, "%u", currentSteps);
+                    char dist_buf[16];
+                    dtostrf(distance_m / 1000.0f, 4, 2, dist_buf);
+                    strcat(dist_buf, "km");
+                    lv_label_set_text(lbl_dist_val, dist_buf);
+                    lv_label_set_text_fmt(lbl_kcal_val, "%ukcal", caloriesBurned);
                 }
             }
 
+            setGpsIconColor(lbl_hike_gps);
+
+            // battery 
             if (millis() - batteryTimer > 5000) {
                 batteryTimer = millis();
+                readBattery();
+                lv_label_set_text(lbl_hike_batt_icon, battIcon());
+                lv_label_set_text(lbl_hike_batt_pct, battPctStr().c_str());
+                lv_label_set_text(lbl_hike_low_batt, batteryPercent < 20 ? "LOW BATTERY!" : "");
+                setBtIconColor(lbl_hike_bt_icon);
+                lv_label_set_text(lbl_hike_charge_icon, chargeIcon());
 
-                if (watch->power->isChargeing()) {
-                    batteryPercent = watch->power->getBattPercentage();
-                } else {
-                    float v = watch->power->getBattVoltage() / 1000.0f;
-                    batteryPercent = constrain((int)((v - 3.3f) / (4.2f - 3.3f) * 100), 0, 100);
-                }
-
-                watch->tft->fillRect(130, 170, 80, 16, TFT_BLACK);
-                watch->tft->drawString(String(batteryPercent) + "%", 130, 170);
-
-                if (batteryPercent < 20) {
-                    watch->tft->setTextColor(TFT_RED, TFT_BLACK);
-                    watch->tft->drawString("LOW BATTERY!", 40, 190);
-                    watch->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-                } else {
-                    watch->tft->fillRect(40, 190, 140, 16, TFT_BLACK);
-                }
             }
-        
 
-            // --- Button interrupt to end hike ---
-            if (irqButton)
-            {
+            /*      IRQ     */
+            if (irqButton) {
+                irqButton = false;
+                watch->power->readIRQ();
+
+                lastActivity = millis();
                 sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
                 sessionDurationMs = millis() - sessionStartMs;
-                irqButton = false;
                 state = 4;
+
+                // if (watch->power->isPEKLongtPressIRQ()) 
+                // {
+                //     watch->power->clearIRQ();
+                //     shutDown();
+                // } 
+                // else if (watch->power->isPEKShortPressIRQ()) 
+                // {
+                //     if (screenAsleep) 
+                //     {
+                //         screenWake();
+                //     }
+                //     else 
+                //     {
+                //         lastActivity = millis();
+                //         sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                //         sessionDurationMs = millis() - sessionStartMs;
+                //         state = 4;
+                //     }
+                // }
+                // watch->power->clearIRQ();
             }
         }
-        break;      
+        break;
     }
 
     case 4:
     {
-        // Save hiking session data
-        saveGpsPointsToFile();      // flush remaining GPS points
+        lv_scr_load(scr_saving);
+        lv_task_handler();
+
+        // save hiking session data
+        saveGpsPointsToFile();
         saveIdToFile(sessionId);
-        saveStepsToFile(currentSteps);
+        saveStepsToFile(sensor->getCounter());
         saveDistanceToFile(distance_m / 1000.0f);
         saveDateTimeToFile(durationStr, sessionStartTime, sessionStartDate);
 
         sessionStored = true;
         sessionSent = false;
-        
-        state = 1;  
-        
-        uint32_t finalSteps = sensor->getCounter();
-        saveStepsToFile(finalSteps);
+
+        delay(3000);
+
+        // bt sync
+        if (SerialBT.hasClient()) {
+            lv_scr_load(scr_sync); 
+            lv_task_handler();
+        }
+
+        BTsync();
+ 
+        if (sessionStored) 
+        {
+            Serial.println("BT not connected or sync failed: Session saved locally");
+ 
+            lv_obj_t *scr_nobt = lv_obj_create(NULL, NULL);
+            setBackground(scr_nobt);
+            addHuippuLogo(scr_nobt);
+            lv_obj_t *nobt_box = makeCard(scr_nobt, 15, 45, 210, 150, 16);
+            makeLabel(nobt_box, "SAVED!", 48, 15, LV_COLOR_BLACK, FONT_HUGE);
+            makeLabel(nobt_box, "Connect BT to", 50, 75, LV_COLOR_BLACK, FONT_MEDIUM);
+            makeLabel(nobt_box, "sync session", 58, 98, LV_COLOR_BLACK, FONT_MEDIUM);
+            lv_scr_load(scr_nobt);
+            lv_task_handler();
+            delay(4000);
+            lv_obj_del(scr_nobt);
+        } 
+
+        lastActivity = millis(); 
+        state = 1;
 
         break;
     }
 
     default:
-        // Restart watch
         ESP.restart();
         break;
     }

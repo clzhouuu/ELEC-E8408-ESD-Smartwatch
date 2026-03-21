@@ -22,3 +22,8 @@ def load_metrics(db) -> SendPackage:
     s.weight = metrics[0]
     s.height = metrics[1]
     return s
+
+def send_config(bt_serial, db):
+    s = load_metrics(db)
+    msg = f"CONFIG,{s.weight},{s.height}\n"
+    bt_serial.write(msg.encode())
