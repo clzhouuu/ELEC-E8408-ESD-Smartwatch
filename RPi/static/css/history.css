@@ -36,3 +36,8 @@ h1{
 .history-table td{
     height: 25px;
 }
+
+.session-row:hover {
+    cursor: pointer;
+    opacity: 0.8;
+}

@@ -52,14 +52,13 @@ html, body {
     top: 48%;
     left: 31.5%;
     transform: translate(-50%, -50%) scaleY(1.5);
-    width: 15.0vw;
+    width: 10vw;
     text-align: center;
     color: #9AAFC0;
     font-family: 'Oswald', sans-serif;
     white-space: nowrap;
     margin: 0;
     padding: 0;
-    overflow: hidden;
 }
 
 .bt-icon-wrapper{

@@ -24,9 +24,14 @@ def get_home():
     return render_template('home.html', sessions=sessions)
 
 @app.route('/session-page')
-def get_session():
-    sessions = hdb.get_sessions() 
-    return render_template('session.html', sessions=sessions)
+@app.route('/session-page/<id>')
+def get_session(id='latest'):
+    sessions = hdb.get_sessions()
+    if id == 'latest':
+        session = sessions[-1] if sessions else None
+    else:
+        session = hdb.get_session(int(id))
+    return render_template('session.html', session=session)
 
 @app.route('/history-page')
 def get_history():

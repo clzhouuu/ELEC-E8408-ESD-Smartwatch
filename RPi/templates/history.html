@@ -16,7 +16,7 @@
                 <th>Distance (km)</th>
                 <th>Calories</th>
             {% for s in sessions %}
-            </tr>
+            <tr class="session-row" onclick="window.location.href='/session-page/{{ s.id }}'">
                 <td>{{ s.id }}</td>
                 <td>-</td>
                 <td>-</td>
