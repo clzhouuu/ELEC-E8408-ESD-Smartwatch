@@ -10,12 +10,24 @@
         <div id="map"></div>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
+            const coords = {{ session.coords | tojson if session else '[]' }};
+
             const map = L.map('map').setView([60.1699, 24.9384], 13);
+
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 subdomains: 'abcd',
                 maxZoom: 20,
                 attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(map);
+
+            map.createPane('routePane');
+            map.getPane('routePane').style.zIndex = 650;
+
+            if (coords.length > 0) {
+                const latLngs = coords.map(c => [c[0], c[1]]);
+                const polyline = L.polyline(latLngs, { color: 'black', weight: 3, pane: 'routePane' }).addTo(map);
+                map.fitBounds(polyline.getBounds());
+            }
         </script>
         <info>
             <text class="step">Stepcount: {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
