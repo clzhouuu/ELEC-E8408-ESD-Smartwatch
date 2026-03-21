@@ -25,15 +25,19 @@
 
             if (coords.length > 0) {
                 const latLngs = coords.map(c => [c[0], c[1]]);
-                const polyline = L.polyline(latLngs, { color: 'black', weight: 3, pane: 'routePane' }).addTo(map);
+                const polyline = L.polyline(latLngs, { color: 'black', weight: 4, pane: 'routePane' }).addTo(map);
                 map.fitBounds(polyline.getBounds());
             }
         </script>
         <info>
-            <text class="step">Stepcount: {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
-            <text class="distance">Travelled Distance: {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
-            <text class="calories">Burned Calories: {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
-            <text class="time">Duration: {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
+            
+            <text class="session">Session #{% if session %}{{ session.id }}{% else %}-{% endif %}</text>
+            <text class="date">&nbsp {% if session %}{{ session.date }}{% else %}-{% endif %}</text>
+            <text class="space">&nbsp</text>
+            <text class="time">Duration: &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
+            <text class="step">Stepcount:  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
+            <text class="distance">Travelled Distance: &nbsp &nbsp {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
+            <text class="calories">Burned Calories: &nbsp  {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
         </info>
     </body>
 </html>
