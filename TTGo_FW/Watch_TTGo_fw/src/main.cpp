@@ -133,9 +133,9 @@ void loop() {
                 watch->gpsHandler();
             }
 
-            // if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
-            //     screenSleep();
-            // }
+            if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
+                screenSleep();
+            }
 
             static unsigned long lastTick = 0;
             if (millis() - lastTick > 1000) {
@@ -165,30 +165,30 @@ void loop() {
                 irqButton = false;
                 watch->power->readIRQ();
 
-                lastActivity = millis();
-                if (state == 1) {
-                    state = 2;
-                }
-
-                // if (watch->power->isPEKLongtPressIRQ()) 
-                // {
-                //     watch->power->clearIRQ();
-                //     shutDown();
-                // } 
-                // else if (watch->power->isPEKShortPressIRQ()) 
-                // {
-                //     if (screenAsleep) 
-                //     {
-                //         screenWake();
-                //     } 
-                //     else 
-                //     {
-                //         lastActivity = millis();
-                        // if (state == 1) {
-                        //     state = 2;
-                        // }
-                //      }
+                // lastActivity = millis();
+                // if (state == 1) {
+                //     state = 2;
                 // }
+
+                if (watch->power->isPEKLongtPressIRQ()) 
+                {
+                    watch->power->clearIRQ();
+                    shutDown();
+                } 
+                else if (watch->power->isPEKShortPressIRQ()) 
+                {
+                    if (screenAsleep) 
+                    {
+                        screenWake();
+                    } 
+                    else 
+                    {
+                        lastActivity = millis();
+                        if (state == 1) {
+                            state = 2;
+                        }
+                     }
+                }
 
                 watch->power->clearIRQ();
             }
@@ -305,9 +305,9 @@ void loop() {
         while (state == 3) {
             lv_task_handler();
 
-            // if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
-            //     screenSleep();
-            // }
+            if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
+                screenSleep();
+            }
 
             lv_label_set_text(lbl_hike_toptime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
 
@@ -367,31 +367,31 @@ void loop() {
                 irqButton = false;
                 watch->power->readIRQ();
 
-                lastActivity = millis();
-                sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
-                sessionDurationMs = millis() - sessionStartMs;
-                state = 4;
+                // lastActivity = millis();
+                // sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                // sessionDurationMs = millis() - sessionStartMs;
+                // state = 4;
 
-                // if (watch->power->isPEKLongtPressIRQ()) 
-                // {
-                //     watch->power->clearIRQ();
-                //     shutDown();
-                // } 
-                // else if (watch->power->isPEKShortPressIRQ()) 
-                // {
-                //     if (screenAsleep) 
-                //     {
-                //         screenWake();
-                //     }
-                //     else 
-                //     {
-                //         lastActivity = millis();
-                //         sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
-                //         sessionDurationMs = millis() - sessionStartMs;
-                //         state = 4;
-                //     }
-                // }
-                // watch->power->clearIRQ();
+                if (watch->power->isPEKLongtPressIRQ()) 
+                {
+                    watch->power->clearIRQ();
+                    shutDown();
+                } 
+                else if (watch->power->isPEKShortPressIRQ()) 
+                {
+                    if (screenAsleep) 
+                    {
+                        screenWake();
+                    }
+                    else 
+                    {
+                        lastActivity = millis();
+                        sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                        sessionDurationMs = millis() - sessionStartMs;
+                        state = 4;
+                    }
+                }
+                watch->power->clearIRQ();
             }
         }
         break;
