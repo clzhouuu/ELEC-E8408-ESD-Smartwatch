@@ -26,6 +26,9 @@
                         <td>{{ s.steps }}</td>
                         <td>{{ s.km }}</td>
                         <td>{{ s.kcal }}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteSession(event, {{ s.id }}, this)">✕</button>
+                        </td>
                     </tr>
                     {% endfor %}
                     {% for i in range(12 - sessions|length) %}
@@ -81,4 +84,17 @@
             </div>
         </div>
     </body>
+    <script>
+        function deleteSession(event, id, btn) {
+            event.stopPropagation();
+            if (!confirm(`Are you sure you want to remove session ${id}?`)) return;
+            fetch(`/sessions/${id}/delete`)
+                .then(res => {
+                    if (res.ok) {
+                        btn.closest('tr').remove();
+                    }
+                });
+        }
+    </script>
+    
 </html>
