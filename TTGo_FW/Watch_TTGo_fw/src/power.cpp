@@ -49,7 +49,7 @@ void initHikeWatch() {
 
     Acfg cfg;
     cfg.odr = BMA4_OUTPUT_DATA_RATE_50HZ;
-    cfg.range = BMA4_ACCEL_RANGE_2G;
+    cfg.range = BMA4_ACCEL_RANGE_4G;
     cfg.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
     cfg.perf_mode = BMA4_CONTINUOUS_MODE;
     sensor->accelConfig(cfg);

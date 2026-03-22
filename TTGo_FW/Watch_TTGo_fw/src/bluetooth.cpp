@@ -103,9 +103,10 @@ void receiveBTConfig() {
     
     if (first != -1 && second != -1) {
         weight = incoming.substring(first + 1, second).toFloat();
-        height = incoming.substring(second + 1).toFloat();
+        height = incoming.substring(second + 1).toFloat() / 100.0f;
         stride = 0.43f * height;
         Serial.printf("Config received: weight=%.1f height=%.1f\n", weight, height);
         SerialBT.write('r'); 
     }
+
 }

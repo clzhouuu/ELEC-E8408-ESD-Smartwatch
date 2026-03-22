@@ -25,7 +25,7 @@ uint32_t sessionId = 0;
 #define SLEEP_TIMEOUT_MS 30000
 
 // input variables
-float height = 1.70f; // average weight and height
+float height = 170.0f / 100.0f; // average weight and height
 float weight = 75.0f;
 
 // distance calculation variables
@@ -211,21 +211,6 @@ void loop() {
             }
  
             if (state == 2) {
-                if (sessionStored) 
-                {
-                    lv_obj_t *scr_warn = lv_obj_create(NULL, NULL);
-                    setBackground(scr_warn);
-                    addHuippuLogo(scr_warn);
-                    lv_obj_t *warn_box = makeCard(scr_warn, 15, 40, 210, 160, 16);
-                    makeLabel(warn_box, "CAUTION!", 28, 12, LV_COLOR_BLACK, FONT_HUGE);
-                    makeLabel(warn_box, "UNSYNCED SESSION", 20, 68, LV_COLOR_BLACK, FONT_MEDIUM);
-                    makeLabel(warn_box, "WILL BE", 72, 90, LV_COLOR_BLACK, FONT_MEDIUM);
-                    makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
-                    lv_scr_load(scr_warn);
-                    lv_task_handler();
-                    delay(5000);
-                    lv_obj_del(scr_warn);
-                }
                 break;
             }
         }
@@ -235,6 +220,31 @@ void loop() {
     case 2:
     {
         /* Hiking session initialisation */
+
+        // Checking for previous session and resyncing
+        if (sessionStored) {
+            if (SerialBT.hasClient()) {
+                Serial.println("Retrying sync");
+                lv_scr_load(scr_sync);
+                lv_task_handler();
+                BTsync();
+            }
+ 
+            if (sessionStored) {
+                lv_obj_t *scr_warn = lv_obj_create(NULL, NULL);
+                setBackground(scr_warn);
+                addHuippuLogo(scr_warn);
+                lv_obj_t *warn_box = makeCard(scr_warn, 15, 40, 210, 160, 16);
+                makeLabel(warn_box, "CAUTION!", 28, 12, LV_COLOR_BLACK, FONT_HUGE);
+                makeLabel(warn_box, "UNSYNCED SESSION", 20, 68, LV_COLOR_BLACK, FONT_MEDIUM);
+                makeLabel(warn_box, "WILL BE", 72, 90, LV_COLOR_BLACK, FONT_MEDIUM);
+                makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
+                lv_scr_load(scr_warn);
+                lv_task_handler();
+                delay(5000);
+                lv_obj_del(scr_warn);
+            }
+        }
 
         deleteFile(LITTLEFS, "/coord.txt");
         gpsPointCount = 0;
@@ -319,7 +329,7 @@ void loop() {
             }
 
             // BMA interrupt
-            if (irqBMA) {
+            if (irqBMA && sessionDurationMs <= 36000000 * 3) {
                 irqBMA = false;
                 sensor->readInterrupt();
                 if (sensor->isStepCounter()) {
@@ -327,7 +337,7 @@ void loop() {
                     uint32_t delta = currentSteps - lastStep;
                     lastStep = currentSteps;
                     distance_m += delta * stride;
-                    caloriesBurned = MET * KCAL_PER_STEP * lastStep;
+                    caloriesBurned = distance_m * weight * (MET / 1.5) / 1000;
 
                     lv_label_set_text_fmt(lbl_steps_val, "%u", currentSteps);
                     char dist_buf[16];
