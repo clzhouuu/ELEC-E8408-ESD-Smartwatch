@@ -36,8 +36,19 @@ def get_session(id='latest'):
 @app.route('/history-page')
 def get_history():
     sessions = hdb.get_sessions() 
-    return render_template('history.html', sessions=sessions)
-
+    if sessions:
+        total = {
+            'km': round(sum(s.km for s in sessions), 1),
+            'steps': sum(s.steps for s in sessions),
+            'kcal': int(sum(s.kcal for s in sessions))
+        }
+        best = max(sessions, key=lambda s: s.km)
+        avg = {
+            'km': round(sum(s.km for s in sessions) / len(sessions), 1),
+            'steps': int(sum(s.steps for s in sessions) / len(sessions)),
+            'kcal': int(sum(s.kcal for s in sessions) / len(sessions))
+        }
+    return render_template('history.html', sessions=sessions, total=total, best=best, avg=avg)
 @app.route('/sessions')
 def get_sessions():
     sessions = hdb.get_sessions() 

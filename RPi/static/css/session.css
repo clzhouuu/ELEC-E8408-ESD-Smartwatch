@@ -13,7 +13,7 @@ html, body { height: 100%; margin: 0; }
 }
 
 info{
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.65);
     padding: 3vh 3vh;
     border-radius: 0.5vh;
     font-family: 'Oswald', sans-serif;
