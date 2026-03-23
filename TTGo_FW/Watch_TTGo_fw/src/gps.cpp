@@ -27,8 +27,8 @@ void saveGpsPointsToFile() {
         return; 
     }
     for (int i = 0; i < gpsPointCount; i++) {
-        file.print(gpsPoints[i].lat, 6); file.print(";");
-        file.print(gpsPoints[i].lon, 6); file.print(";");
+        file.print(gpsPoints[i].lat, 6); file.print(",");
+        file.print(gpsPoints[i].lon, 6); file.print(";\n");
     }
     file.close();
 }

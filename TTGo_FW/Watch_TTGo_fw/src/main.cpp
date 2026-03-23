@@ -45,7 +45,6 @@ String durationStr = "";
 // calorie estimation variables
 const float MET = 6;
 uint32_t caloriesBurned = 0;
-const float KCAL_PER_STEP = 0.04;
 
 // state machine
 volatile uint8_t state = 1;
@@ -305,6 +304,13 @@ void loop() {
         while (state == 3) {
             lv_task_handler();
 
+            if (sessionDurationMs > 3UL * 3600000UL) {
+                lastActivity = millis();
+                sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                sessionDurationMs = millis() - sessionStartMs;
+                state = 4;
+            }
+
             if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
                 screenSleep();
             }
@@ -329,7 +335,7 @@ void loop() {
             }
 
             // BMA interrupt
-            if (irqBMA && sessionDurationMs <= 36000000 * 3) {
+            if (irqBMA) {
                 irqBMA = false;
                 sensor->readInterrupt();
                 if (sensor->isStepCounter()) {

@@ -49,7 +49,7 @@ void BTsync() {
     {
         unsigned long syncStart = millis();
 
-        while (millis() - syncStart < 2000) 
+        while (millis() - syncStart < 5000) 
         {
             if (SerialBT.available()) 
                 incomingChar = SerialBT.read();
@@ -64,7 +64,7 @@ void BTsync() {
                 lv_obj_t *scr_saved = lv_obj_create(NULL, NULL);
                 setBackground(scr_saved);
                 addHuippuLogo(scr_saved);
-                makeLabel(scr_saved, "SAVED", 76, 105, LV_COLOR_BLACK, FONT_HUGE);
+                makeLabel(scr_saved, "SYNCHED", 76, 105, LV_COLOR_BLACK, FONT_HUGE);
                 lv_scr_load(scr_saved);
                 lv_task_handler();
                 delay(3000);
@@ -98,15 +98,18 @@ void receiveBTConfig() {
     String incoming = SerialBT.readStringUntil('\n');
     incoming.trim();
     
-    int first  = incoming.indexOf(';');
-    int second = incoming.indexOf(';', first + 1);
-    
-    if (first != -1 && second != -1) {
-        weight = incoming.substring(first + 1, second).toFloat();
-        height = incoming.substring(second + 1).toFloat() / 100.0f;
-        stride = 0.43f * height;
-        Serial.printf("Config received: weight=%.1f height=%.1f\n", weight, height);
-        SerialBT.write('r'); 
+    if (incoming.startsWith("CONFIG")) {
+        int first  = incoming.indexOf(';');
+        int second = incoming.indexOf(';', first + 1);
+        
+        if (first != -1 && second != -1) {
+            weight = incoming.substring(first + 1, second).toFloat();
+            height = incoming.substring(second + 1).toFloat() / 100.0f;
+            stride = 0.43f * height;
+            Serial.printf("Config received: weight=%.1f height=%.1f\n", weight, height);
+            SerialBT.write('r'); 
     }
+    }
+
 
 }

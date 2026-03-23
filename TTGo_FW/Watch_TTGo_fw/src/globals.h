@@ -54,7 +54,7 @@ struct GpsPoint {
     double lon;
 };
 
-static const int MAX_GPS_POINTS = 500;
+static const int MAX_GPS_POINTS = 1000;
 
 extern GpsPoint gpsPoints[MAX_GPS_POINTS];
 extern int gpsPointCount;
