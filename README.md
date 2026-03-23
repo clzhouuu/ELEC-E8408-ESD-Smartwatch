@@ -77,18 +77,15 @@ bluetoothctl
 > exit
 ```
 
-### 3. Start the Hub
-Navigate to the `RPi/` folder and run both services in separate terminals:
+### 3. Start the Hub and Web UI
+Navigate to the `RPi/` folder and run:
 ```bash
-# Terminal 1 — bluetooth receiver
-python3 receiver.py
-
-# Terminal 2 — web UI
-python3 wserver.py
+python3 main.py
 ```
+Open a browser and navigate to `http://localhost:5000`.
 
 ### 4. Set User Profile
-Open a browser and navigate to `http://local:5000`. Click **Settings**, enter the hiker's weight (kg) and height (cm), and click Save. If the watch is already connected via Bluetooth, the information is pushed to the watch automatically.
+ In the landing page, click **Settings**, enter the hiker's weight (kg) and height (cm), and click Save. If the watch is already connected via Bluetooth, the information is pushed to the watch automatically.
 
 
 ## Usage
