@@ -337,7 +337,7 @@ void loop() {
                     uint32_t delta = currentSteps - lastStep;
                     lastStep = currentSteps;
                     distance_m += delta * stride;
-                    caloriesBurned = distance_m * weight * (MET / 1.5) / 1000;
+                    caloriesBurned = weight  * MET * ( distance_m / 1000.0f / 5.0f);
 
                     lv_label_set_text_fmt(lbl_steps_val, "%u", currentSteps);
                     char dist_buf[16];
