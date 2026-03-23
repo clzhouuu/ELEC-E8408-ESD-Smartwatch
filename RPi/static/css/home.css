@@ -46,17 +46,19 @@ html, body {
     width: 13vh;
     height: 4vh;
 }
-.total{
+
+.total {
     position: absolute;
-    top: 38%;
-    left: 19%;
-    transform: translate(-50%, -50%);
-    width: 13vhw;
-    height: 12vh;
+    top: 48%;
+    left: 31.5%;
+    transform: translate(-50%, -50%) scaleY(1.5);
+    width: 6.2vw;
+    text-align: center;
     color: #9AAFC0;
-    font-size: 5.5vh;
     font-family: 'Oswald', sans-serif;
-    transform: scaleY(1.8);
+    white-space: nowrap;
+    margin: 0;
+    padding: 0;
 }
 
 .bt-icon-wrapper{

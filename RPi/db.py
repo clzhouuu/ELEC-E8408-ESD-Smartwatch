@@ -120,24 +120,35 @@ class HubDatabase:
         finally:
             self.lock.release()
 
+    def get_coords(self, session_id: int):
+        try:
+            self.lock.acquire()
+            rows = self.cur.execute(
+                f"SELECT lat, lon, alt FROM {DB_GPS_TABLE['name']} WHERE session_id = ?", (session_id,)).fetchall()
+        finally:
+            self.lock.release()
+        return list(rows)
+
     def get_sessions(self) -> List[hike.HikeSession]:
         try:
             self.lock.acquire()
             rows = self.cur.execute(f"SELECT * FROM {DB_SESSION_TABLE['name']}").fetchall()
         finally:
             self.lock.release()
-
-        return list(map(lambda r: hike.from_list(r), rows))
+        sessions = list(map(lambda r: hike.from_list(r), rows))
+        for s in sessions:
+            s.coords = self.get_coords(s.id)
+        return sessions
 
     def get_session(self, session_id: int) -> hike.HikeSession:
         try:
             self.lock.acquire()
             rows = self.cur.execute(f"SELECT * FROM {DB_SESSION_TABLE['name']} WHERE session_id = ?", (session_id,)).fetchall()
-
         finally:
             self.lock.release()
-
-        return hike.from_list(rows[0])
+        s = hike.from_list(rows[0])
+        s.coords = self.get_coords(s.id)
+        return s
 
 
     def __del__(self):

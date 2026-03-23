@@ -13,8 +13,8 @@
             <img src="/static/images/LilyGo.png" class="LilyGo">
             <div class="square"></div>
             <img src="/static/images/lilygo-logo.png" class="lilygo-logo">
-            <h1 class="total">{{ sessions | sum(attribute='km') | round(1) }} KM</h1>
-            <div class="bt-icon-wrapper {% if not bt_connected %}disconnected{% endif %}">
+            <h1 class="total">{{ sessions | sum(attribute='km') | int }} KM</h1>
+            <div class="bt-icon-wrapper" id="bt-icon">
                 <i class="fa-brands fa-bluetooth"></i>
             </div>
         </div>
@@ -25,7 +25,7 @@
                 <div class="dropdown">
                     <i class="fas fa-bars icon menu-icon"></i>
                     <div class="dropdown-content">
-                        <div class="dropdown-item" data-page="/session-page">Last Session</div>
+                        <div class="dropdown-item" data-page="/session-page/latest">Last Session</div>
                         <div class="dropdown-item" data-page="/history-page">Hiking History</div>
                     </div>
                 </div>     
@@ -78,6 +78,21 @@
                 }
             });
         });
+        
+        function fitText(el) {
+            el.style.fontSize = '200px'; 
+            const scale = el.clientWidth / el.scrollWidth;
+            el.style.fontSize = `${200 * scale}px`;
+        }
+
+        document.fonts.ready.then(() => {
+            const totalEl = document.querySelector('.total');
+            if (totalEl) {
+                fitText(totalEl);
+            }
+        });
+        
+        
         function checkIfChanged() {
             const changed =
                 heightInput.value != originalHeight ||
@@ -113,7 +128,21 @@
             originalWeight = weight;
             saveButton.disabled = true;
             });
-
+        
+        
+        async function updateBtStatus() {
+            const res = await fetch('/bt-status');
+            const data = await res.json();
+            const el = document.getElementById('bt-icon');
+            if (data.connected) {
+                el.classList.remove('disconnected');
+            } else {
+                el.classList.add('disconnected');
+            }
+        }
+        setInterval(updateBtStatus, 3000);
+        updateBtStatus();
+        
         loadSettings();
     });
     </script>

@@ -20,18 +20,35 @@ if metrics:
 @app.route('/')
 def get_home():
     sessions = hdb.get_sessions() 
-    return render_template('home.html', sessions=sessions, bt_connected=hubbt.connected)
+    bt = hubbt.connected
+    return render_template('home.html', sessions=sessions)
 
 @app.route('/session-page')
-def get_session():
-    sessions = hdb.get_sessions() 
-    return render_template('session.html', sessions=sessions)
+@app.route('/session-page/<id>')
+def get_session(id='latest'):
+    sessions = hdb.get_sessions()
+    if id == 'latest':
+        session = sessions[-1] if sessions else None
+    else:
+        session = hdb.get_session(int(id))
+    return render_template('session.html', session=session)
 
 @app.route('/history-page')
 def get_history():
     sessions = hdb.get_sessions() 
-    return render_template('history.html', sessions=sessions)
-
+    if sessions:
+        total = {
+            'km': round(sum(s.km for s in sessions), 1),
+            'steps': sum(s.steps for s in sessions),
+            'kcal': int(sum(s.kcal for s in sessions))
+        }
+        best = max(sessions, key=lambda s: s.km)
+        avg = {
+            'km': round(sum(s.km for s in sessions) / len(sessions), 1),
+            'steps': int(sum(s.steps for s in sessions) / len(sessions)),
+            'kcal': int(sum(s.kcal for s in sessions) / len(sessions))
+        }
+    return render_template('history.html', sessions=sessions, total=total, best=best, avg=avg)
 @app.route('/sessions')
 def get_sessions():
     sessions = hdb.get_sessions() 
@@ -70,6 +87,10 @@ def save_settings():
     hubbt.send_package(outbound_package.load_metrics(hdb))
 
     return jsonify({"height": height, "weight": weight})
+    
+@app.route('/bt-status')
+def bt_status():
+    return jsonify({"connected": hubbt.connected})
 
 if __name__ == "__main__":
     app.run('0.0.0.0', debug=True)

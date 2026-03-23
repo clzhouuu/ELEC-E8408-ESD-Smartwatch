@@ -10,19 +10,39 @@
         <div id="map"></div>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
+            const coords = {{ session.coords | tojson if session else '[]' }};
+
             const map = L.map('map').setView([60.1699, 24.9384], 13);
+
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 subdomains: 'abcd',
                 maxZoom: 20,
                 attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(map);
+
+            map.createPane('routePane');
+            map.getPane('routePane').style.zIndex = 650;
+
+            if (coords.length > 0) {
+                const latLngs = coords.map(c => [c[0], c[1]]);
+                const polyline = L.polyline(latLngs, { color: '#007AA1', weight: 4, pane: 'routePane' }).addTo(map);
+                map.fitBounds(polyline.getBounds());
+            }
         </script>
-        <info>
-            <text class="step">Stepcount:</text>
-            <text class="distance">Travelled Distance:</text>
-            <text class="calories">Burned Calories:</text>
-            <text class="time">Duration:</text>
-        </info>
+        <session-data>
+            <div id="image">
+                 <img src="/static/images/session-image.png" class="session-image">
+            </div>
+            <info>
+                <text class="session">Session #{% if session %}{{ session.id }}{% else %}-{% endif %}</text>
+                <text class="date">&nbsp {% if session %}{{ session.date }}{% else %}-{% endif %}</text>
+                <text class="space">&nbsp</text>
+                <text class="time">Duration: &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
+                <text class="step">Stepcount:  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
+                <text class="distance">Travelled Distance: &nbsp &nbsp {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
+                <text class="calories">Burned Calories: &nbsp  {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
+            </info>
+        </session-data>
     </body>
 </html>
 
