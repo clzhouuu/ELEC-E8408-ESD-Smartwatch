@@ -165,7 +165,7 @@ class HubBluetooth:
         hs.start_time = str(parts[5])  
 
         def cvt_coord(c):
-            sc = c.split(';')
+            sc = c.split(',')
             assert len(sc) == 2, f"MessageProcessingError -> Unable to process coordinate: {c}"
             return float(sc[0]), float(sc[1]) 
 
