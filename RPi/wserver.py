@@ -21,7 +21,6 @@ if metrics:
 @app.route('/')
 def get_home():
     sessions = hdb.get_sessions() 
-    bt = hubbt.connected
     return render_template('home.html', sessions=sessions)
 
 @app.route('/session-page')

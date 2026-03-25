@@ -38,7 +38,7 @@ session-data{
 
 
 info{
-    height: 40%;
+    height: 30%;
     top: 1%;
     width: 85%;
     background-color: white;
@@ -76,8 +76,6 @@ info{
 .calories,
 .time {
     font-size: 1.9vh;
-    padding: 0vh;
-    margin: 0.8vh;
     
 }
 
