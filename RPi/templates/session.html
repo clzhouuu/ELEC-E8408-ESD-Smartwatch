@@ -30,6 +30,10 @@
             }
         </script>
         <session-data>
+            <div class="navigation">
+                <div class="page" data-page="/">Home</div>
+                <div class="page" data-page="/history-page">Hiking History</div>
+            </div>
             <div id="image">
                 <img src="/static/images/{% if session %}session{{ ((session.id) % 3) + 1 }}.jpeg{% else %}session1.jpeg{% endif %}" class="session-image">
             </div>
@@ -43,6 +47,17 @@
                 <text class="calories">Burned Calories: &nbsp  {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
             </info>
         </session-data>
+        <script>
+             const pages = document.querySelectorAll('.page');
+                pages.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const data = item.getAttribute('data-page');
+                        if (data) {
+                            window.location.href = data;
+                        }
+                    });
+                });
+        </script>
     </body>
 </html>
 

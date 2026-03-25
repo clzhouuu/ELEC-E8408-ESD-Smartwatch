@@ -5,6 +5,21 @@
         <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Oswald&display=swap" rel="stylesheet">
     </head>
     <body>
+        <div class="navigation">
+                <div class="page" data-page="/">Home</div>
+                <div class="page" data-page="/session-page/latest">Last Session</div>
+            </div>
+            <script>
+             const pages = document.querySelectorAll('.page');
+                pages.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const data = item.getAttribute('data-page');
+                        if (data) {
+                            window.location.href = data;
+                        }
+                    });
+                });
+            </script>
         <div class="content">
             <div class="history-column">
                 <h1>SESSION LOG</h1>
