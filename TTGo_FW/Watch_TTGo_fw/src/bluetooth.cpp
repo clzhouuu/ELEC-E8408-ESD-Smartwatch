@@ -56,7 +56,6 @@ void BTsync() {
             if (incomingChar == 'r') 
             {
                 Serial.println("Got an R");
-                deleteSession();
                 sessionId++;
                 sessionStored = false;
                 sessionSent = false;
@@ -64,11 +63,13 @@ void BTsync() {
                 lv_obj_t *scr_saved = lv_obj_create(NULL, NULL);
                 setBackground(scr_saved);
                 addHuippuLogo(scr_saved);
-                makeLabel(scr_saved, "SYNCHED", 76, 105, LV_COLOR_BLACK, FONT_HUGE);
+                makeLabel(scr_saved, "SYNCHED", 61, 20, LV_COLOR_BLACK, FONT_MEDIUM);
                 lv_scr_load(scr_saved);
                 lv_task_handler();
                 delay(3000);
                 lv_obj_del(scr_saved);
+                
+                deleteSession();
                 return;
             }
         }

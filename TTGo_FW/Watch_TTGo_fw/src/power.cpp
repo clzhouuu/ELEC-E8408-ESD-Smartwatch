@@ -15,15 +15,15 @@ void readBattery() {
 
 // screen sleep
 void screenSleep() {
+    if (screenAsleep) return;
     screenAsleep = true;
     watch->closeBL();
-    watch->displaySleep();
 }
 
 // screen wake
 void screenWake() {
+    if (!screenAsleep) return;
     screenAsleep = false;
-    watch->displayWakeup();
     watch->openBL();
     lastActivity = millis();
 }

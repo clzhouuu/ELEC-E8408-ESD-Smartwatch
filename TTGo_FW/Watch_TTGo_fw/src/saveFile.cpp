@@ -17,7 +17,7 @@ void saveDistanceToFile(float distance) {
     writeFile(LITTLEFS, "/distance.txt", buffer);
 }
 
-void saveDateTimeToFile(const String &dur, const String &startTime, const String &startDate) {
+void saveDateTimeToFile(const String &dur, const String &startDate, const String &startTime) {
     String content = dur + ";" + startDate + ";" + startTime;
     writeFile(LITTLEFS, "/datetime.txt", content.c_str());
 }

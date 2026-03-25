@@ -64,14 +64,80 @@ bool screenAsleep = false;
 unsigned long lastActivity = 0;
 
 // session sync
-bool sessionStored = false;
+bool sessionStored = LittleFS.exists("/id.txt") &&
+                LittleFS.exists("/steps.txt") &&
+                LittleFS.exists("/distance.txt") &&
+                LittleFS.exists("/datetime.txt");
 bool sessionSent = false;
 
 GpsPoint gpsPoints[MAX_GPS_POINTS];
 int gpsPointCount = 0;
 unsigned long lastGpsSave = 0;
 unsigned long lastGpsFileSave = 0;
-bool rtcSynced = false;
+
+int monthStrToNumber(String month) {
+    if (month == "Jan") return 1;
+    if (month == "Feb") return 2;
+    if (month == "Mar") return 3;
+    if (month == "Apr") return 4;
+    if (month == "May") return 5;
+    if (month == "Jun") return 6;
+    if (month == "Jul") return 7;
+    if (month == "Aug") return 8;
+    if (month == "Sep") return 9;
+    if (month == "Oct") return 10;
+    if (month == "Nov") return 11;
+    if (month == "Dec") return 12;
+    return 1;
+}
+
+
+// touchscreen
+void requestTouchWake() {
+    lastActivity = millis();
+    if (screenAsleep) {
+        screenWake();
+    }
+}
+
+void startHikeBtnEvent(lv_obj_t *obj, lv_event_t event) {
+    if (event != LV_EVENT_CLICKED) return;
+
+    if (screenAsleep) {
+        requestTouchWake();
+        return;
+    }
+
+    lastActivity = millis();
+
+    if (state == 1) {
+        state = 2;
+    }
+}
+
+void endHikeBtnEvent(lv_obj_t *obj, lv_event_t event) {
+    if (event != LV_EVENT_CLICKED) return;
+
+    if (screenAsleep) {
+        requestTouchWake();
+        return;
+    }
+
+    lastActivity = millis();
+
+    if (state == 3) {
+        sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+        sessionDurationMs = millis() - sessionStartMs;
+        state = 4;
+    }
+}
+
+
+void wakeTouchEvent(lv_obj_t *obj, lv_event_t event) {
+    if (event == LV_EVENT_PRESSED || event == LV_EVENT_PRESSING || event == LV_EVENT_CLICKED) {
+        requestTouchWake();
+    }
+}
 
 // setup
 void setup() {
@@ -80,6 +146,11 @@ void setup() {
     watch->begin();
     watch->lvgl_begin();
     watch->openBL();
+
+    Serial.print("__DATE__ = ");
+    Serial.println(__DATE__);
+    Serial.print("__TIME__ = ");
+    Serial.println(__TIME__);
 
     sensor = watch->bma;
     rtc = watch->rtc;
@@ -90,17 +161,32 @@ void setup() {
     gps = watch->gps;
 
     initHikeWatch();
-
     buildIdleScreen();
     buildHikeScreen();
     buildSavingScreen();
     buildSyncScreen();
+
+    sessionStored = LittleFS.exists("/id.txt") &&
+            LittleFS.exists("/steps.txt") &&
+            LittleFS.exists("/distance.txt") &&
+            LittleFS.exists("/datetime.txt");
+
+    rtc->setDateTime(
+        String(__DATE__).substring(7, 11).toInt(),   
+        monthStrToNumber(String(__DATE__).substring(0, 3)),
+        String(__DATE__).substring(4, 6).toInt(),   
+        String(__TIME__).substring(0, 2).toInt(),   
+        String(__TIME__).substring(3, 5).toInt(),
+        String(__TIME__).substring(6, 8).toInt()   
+    );
+
 
     state = 1;
     lastActivity = millis(); 
     SerialBT.begin("Hiking Watch");
     Serial.println("Bluetooth started");
 }
+
 
 // loop
 void loop() {
@@ -109,9 +195,16 @@ void loop() {
     switch (state) {
     case 1:
     {
+        Serial.print("__DATE__ = ");
+        Serial.println(__DATE__);
+        Serial.print("__TIME__ = ");
+        Serial.println(__TIME__);
+        Serial.print("RTC after set = ");
+        Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
         /* Initial stage */
         lv_scr_load(scr_idle);
         lv_label_set_text(lbl_idle_bigtime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
+        lv_label_set_text(lbl_idle_date, rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
         lv_label_set_text(lbl_idle_batt_icon, battIcon());
         lv_label_set_text(lbl_idle_batt_pct, battPctStr().c_str());
 
@@ -141,6 +234,7 @@ void loop() {
                 lastTick = millis();
                 readBattery();
                 lv_label_set_text(lbl_idle_bigtime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
+                lv_label_set_text(lbl_idle_date, rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
                 lv_label_set_text(lbl_idle_batt_icon, battIcon());
                 lv_label_set_text(lbl_idle_batt_pct, battPctStr().c_str());
                 lv_label_set_text(lbl_idle_charge_icon, chargeIcon());
@@ -159,56 +253,35 @@ void loop() {
                 }
             }
 
-            /*      IRQ     */
-            if (irqButton) {
-                irqButton = false;
-                watch->power->readIRQ();
+            static bool rtcSyncedFromGps = false;
+            static unsigned long lastRtcSync = 0;
 
-                // lastActivity = millis();
-                // if (state == 1) {
-                //     state = 2;
-                // }
+            if (gps &&
+                gps->date.isValid() &&
+                gps->time.isValid() &&
+                gps->date.isUpdated() &&
+                gps->time.isUpdated() &&
+                gps->location.isValid() &&
+                gps->location.age() < 3000)
+            {
+                int year   = gps->date.year();
+                int month  = gps->date.month();
+                int day    = gps->date.day();
+                int hour   = gps->time.hour() + 1; 
+                int minute = gps->time.minute();
+                int second = gps->time.second();
 
-                if (watch->power->isPEKLongtPressIRQ()) 
-                {
-                    watch->power->clearIRQ();
-                    shutDown();
-                } 
-                else if (watch->power->isPEKShortPressIRQ()) 
-                {
-                    if (screenAsleep) 
-                    {
-                        screenWake();
-                    } 
-                    else 
-                    {
-                        lastActivity = millis();
-                        if (state == 1) {
-                            state = 2;
-                        }
-                     }
+                if (hour >= 24) hour -= 24;
+
+                if (!rtcSyncedFromGps || millis() - lastRtcSync > 60000) {
+                    rtc->setDateTime(year, month, day, hour, minute, second);
+                    lastRtcSync = millis();
+                    rtcSyncedFromGps = true;
+
+                    Serial.printf("RTC synced from GPS: %04d-%02d-%02d %02d:%02d:%02d\n",
+                                year, month, day, hour, minute, second);
                 }
-
-                watch->power->clearIRQ();
             }
-
-            if (!rtcSynced && gps && gps->time.isValid() && gps->date.isValid()) {
-                int hour = gps->time.hour() + 2;
-                if (hour >= 24) {
-                    hour -= 24;
-                }
-
-                rtc->setDateTime(
-                    gps->date.year(),
-                    gps->date.month(),
-                    gps->date.day(),
-                    hour,
-                    gps->time.minute(),
-                    gps->time.second()
-                );
-                rtcSynced = true;
-            }
- 
             if (state == 2) {
                 break;
             }
@@ -221,6 +294,7 @@ void loop() {
         /* Hiking session initialisation */
 
         // Checking for previous session and resyncing
+        
         if (sessionStored) {
             if (SerialBT.hasClient()) {
                 Serial.println("Retrying sync");
@@ -240,12 +314,14 @@ void loop() {
                 makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
                 lv_scr_load(scr_warn);
                 lv_task_handler();
-                delay(5000);
+                delay(3000);
                 lv_obj_del(scr_warn);
+
+                deleteSession();
+
             }
         }
 
-        deleteFile(LITTLEFS, "/coord.txt");
         gpsPointCount = 0;
         lastGpsSave = 0;
         lastGpsFileSave = 0;
@@ -261,6 +337,7 @@ void loop() {
         sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
         sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
         sessionStartMs = millis();
+        sessionDurationMs = 0;
 
         lv_obj_t *scr_start = lv_obj_create(NULL, NULL);
         setBackground(scr_start);
@@ -268,7 +345,7 @@ void loop() {
         makeLabel(scr_start, "Starting hike", 65, 108, LV_COLOR_BLACK, FONT_MEDIUM);
         lv_scr_load(scr_start);
         lv_task_handler();
-        delay(2000);
+        delay(3000);
         lv_obj_del(scr_start);
 
         lv_scr_load(scr_hike);
@@ -292,10 +369,6 @@ void loop() {
         currentSteps = 0;
         caloriesBurned = 0;
 
-        // reset irq
-        irqButton = false;
-        watch->power->readIRQ();
-        watch->power->clearIRQ();
 
         lastActivity = millis(); 
         lv_task_handler();
@@ -368,37 +441,7 @@ void loop() {
 
             }
 
-            /*      IRQ     */
-            if (irqButton) {
-                irqButton = false;
-                watch->power->readIRQ();
 
-                // lastActivity = millis();
-                // sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
-                // sessionDurationMs = millis() - sessionStartMs;
-                // state = 4;
-
-                if (watch->power->isPEKLongtPressIRQ()) 
-                {
-                    watch->power->clearIRQ();
-                    shutDown();
-                } 
-                else if (watch->power->isPEKShortPressIRQ()) 
-                {
-                    if (screenAsleep) 
-                    {
-                        screenWake();
-                    }
-                    else 
-                    {
-                        lastActivity = millis();
-                        sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
-                        sessionDurationMs = millis() - sessionStartMs;
-                        state = 4;
-                    }
-                }
-                watch->power->clearIRQ();
-            }
         }
         break;
     }
@@ -413,7 +456,7 @@ void loop() {
         saveIdToFile(sessionId);
         saveStepsToFile(sensor->getCounter());
         saveDistanceToFile(distance_m / 1000.0f);
-        saveDateTimeToFile(durationStr, sessionStartTime, sessionStartDate);
+        saveDateTimeToFile(durationStr, sessionStartDate, sessionStartTime);
 
         sessionStored = true;
         sessionSent = false;
@@ -441,7 +484,7 @@ void loop() {
             makeLabel(nobt_box, "sync session", 58, 98, LV_COLOR_BLACK, FONT_MEDIUM);
             lv_scr_load(scr_nobt);
             lv_task_handler();
-            delay(4000);
+            delay(3000);
             lv_obj_del(scr_nobt);
         } 
 

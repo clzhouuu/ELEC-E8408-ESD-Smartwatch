@@ -52,6 +52,7 @@ extern String durationStr;
 struct GpsPoint {
     double lat;
     double lon;
+    double alt;
 };
 
 static const int MAX_GPS_POINTS = 1000;
@@ -60,4 +61,3 @@ extern GpsPoint gpsPoints[MAX_GPS_POINTS];
 extern int gpsPointCount;
 extern unsigned long lastGpsSave;
 extern unsigned long lastGpsFileSave;
-extern bool rtcSynced;
