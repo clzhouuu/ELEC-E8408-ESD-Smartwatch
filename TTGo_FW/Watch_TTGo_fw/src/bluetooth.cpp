@@ -100,7 +100,7 @@ void receiveBTConfig() {
     incoming.trim();
     
     if (incoming.startsWith("CONFIG")) {
-        int first  = incoming.indexOf(';');
+        int first  = incoming.indexOf(',');
         int second = incoming.indexOf(';', first + 1);
         
         if (first != -1 && second != -1) {

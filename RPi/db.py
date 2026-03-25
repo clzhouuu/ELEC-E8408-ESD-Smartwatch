@@ -13,10 +13,11 @@ DB_SESSION_TABLE = {
         "steps integer",
         "burnt_kcal integer",
         "duration integer",
-        "date integer",
-        "start_time integer"
+        "start_time integer",
+        "date integer"
     ]
 }
+
 DB_GPS_TABLE = {
     "name": "gps_points",
     "cols": [
@@ -24,6 +25,7 @@ DB_GPS_TABLE = {
         "session_id INTEGER",
         "lat REAL",
         "lon REAL",
+        "alt REAL",
         "FOREIGN KEY (session_id) REFERENCES sessions(session_id)"
     ]
 }
@@ -80,10 +82,10 @@ class HubDatabase:
 
             try:
                 self.cur.execute(
-                    f"INSERT INTO {DB_SESSION_TABLE['name']} VALUES (?, ?, ?, ?, ?, ?, ?)", (s.id, s.km, s.steps, s.kcal, s.duration, s.date, s.start_time))
+                    f"INSERT INTO {DB_SESSION_TABLE['name']} VALUES (?, ?, ?, ?, ?, ?, ?)", (s.id, s.km, s.steps, s.kcal, s.duration, s.start_time, s.date))
                 for lat, lon, alt in s.coords:
                     self.cur.execute(
-                        f"INSERT INTO {DB_GPS_TABLE['name']} (session_id, lat, lon) VALUES (?, ?, ?)",(s.id, lat, lon))         
+                        f"INSERT INTO {DB_GPS_TABLE['name']} (session_id, lat, lon, alt) VALUES (?, ?, ?, ?)",(s.id, lat, lon, alt))         
             except sqlite3.IntegrityError:
                 print("WARNING: Session ID already exists in database! Aborting saving current session.")
 
@@ -123,7 +125,9 @@ class HubDatabase:
         try:
             self.lock.acquire()
             rows = self.cur.execute(
-                f"SELECT lat, lon FROM {DB_GPS_TABLE['name']} WHERE session_id = ?", (session_id,)).fetchall()
+                f"SELECT lat, lon, alt FROM {DB_GPS_TABLE['name']} WHERE session_id = ?",
+                (session_id,)
+            ).fetchall()
         finally:
             self.lock.release()
         return list(rows)

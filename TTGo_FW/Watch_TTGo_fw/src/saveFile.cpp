@@ -12,6 +12,11 @@ void saveStepsToFile(uint32_t step_count) {
     writeFile(LITTLEFS, "/steps.txt", buffer);
 }
 
+void saveKcalToFile(uint16_t id) {
+    char buffer[10]; itoa(caloriesBurned, buffer, 10);
+    writeFile(LITTLEFS, "/kcal.txt", buffer);
+}
+
 void saveDistanceToFile(float distance) {
     char buffer[16]; dtostrf(distance, 6, 3, buffer);
     writeFile(LITTLEFS, "/distance.txt", buffer);
@@ -25,6 +30,7 @@ void saveDateTimeToFile(const String &dur, const String &startDate, const String
 void deleteSession() {
     deleteFile(LITTLEFS, "/id.txt");
     deleteFile(LITTLEFS, "/distance.txt");
+    deleteFile(LITTLEFS, "/kcal.txt");
     deleteFile(LITTLEFS, "/steps.txt");
     deleteFile(LITTLEFS, "/datetime.txt");
     deleteFile(LITTLEFS, "/coord.txt");

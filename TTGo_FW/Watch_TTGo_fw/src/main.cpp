@@ -454,6 +454,7 @@ void loop() {
         // save hiking session data
         saveGpsPointsToFile();
         saveIdToFile(sessionId);
+        saveKcalToFile(caloriesBurned);
         saveStepsToFile(sensor->getCounter());
         saveDistanceToFile(distance_m / 1000.0f);
         saveDateTimeToFile(durationStr, sessionStartDate, sessionStartTime);
