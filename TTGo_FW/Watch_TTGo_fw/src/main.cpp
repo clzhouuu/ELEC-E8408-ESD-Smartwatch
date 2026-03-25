@@ -166,6 +166,8 @@ void setup() {
     buildSavingScreen();
     buildSyncScreen();
 
+    deleteSession();
+
     sessionStored = LittleFS.exists("/id.txt") &&
             LittleFS.exists("/steps.txt") &&
             LittleFS.exists("/distance.txt") &&
@@ -180,7 +182,7 @@ void setup() {
         String(__TIME__).substring(6, 8).toInt()   
     );
 
-
+    sessionId = 1;
     state = 1;
     lastActivity = millis(); 
     SerialBT.begin("Hiking Watch");
@@ -454,10 +456,10 @@ void loop() {
         // save hiking session data
         saveGpsPointsToFile();
         saveIdToFile(sessionId);
-        saveKcalToFile(caloriesBurned);
-        saveStepsToFile(sensor->getCounter());
         saveDistanceToFile(distance_m / 1000.0f);
-        saveDateTimeToFile(durationStr, sessionStartDate, sessionStartTime);
+        saveStepsToFile(sensor->getCounter());
+        saveKcalToFile(caloriesBurned);
+        saveDateTimeToFile(durationStr, sessionStartTime, sessionStartDate);
 
         sessionStored = true;
         sessionSent = false;

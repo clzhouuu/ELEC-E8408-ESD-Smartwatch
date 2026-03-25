@@ -12,7 +12,7 @@ void saveStepsToFile(uint32_t step_count) {
     writeFile(LITTLEFS, "/steps.txt", buffer);
 }
 
-void saveKcalToFile(uint16_t id) {
+void saveKcalToFile(uint32_t caloriesBurned) {
     char buffer[10]; itoa(caloriesBurned, buffer, 10);
     writeFile(LITTLEFS, "/kcal.txt", buffer);
 }
@@ -22,8 +22,8 @@ void saveDistanceToFile(float distance) {
     writeFile(LITTLEFS, "/distance.txt", buffer);
 }
 
-void saveDateTimeToFile(const String &dur, const String &startDate, const String &startTime) {
-    String content = dur + ";" + startDate + ";" + startTime;
+void saveDateTimeToFile(const String &dur, const String &startTime, const String &startDate) {
+    String content = dur + ";" + startTime + ";" + startDate;
     writeFile(LITTLEFS, "/datetime.txt", content.c_str());
 }
 

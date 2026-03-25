@@ -22,6 +22,8 @@ void sendSessionBT() {
     SerialBT.write(';');
     sendDataBT(LITTLEFS, "/steps.txt"); 
     SerialBT.write(';');
+    sendDataBT(LITTLEFS, "/kcal.txt");
+    SerialBT.write(';');
     sendDataBT(LITTLEFS, "/distance.txt"); 
     SerialBT.write(';');
     sendDataBT(LITTLEFS, "/datetime.txt");
@@ -86,7 +88,7 @@ void BTsync() {
         makeLabel(fail_box, "on device", 66, 95, LV_COLOR_BLACK, FONT_MEDIUM);
         lv_scr_load(scr_savedFail);
         lv_task_handler();
-        delay(4000);
+        delay(3000);
         lv_obj_del(scr_savedFail);
     }
 }
