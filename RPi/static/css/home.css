@@ -50,7 +50,7 @@ html, body {
 .total {
     position: absolute;
     top: 48%;
-    left: 31.5%;
+    left: 30%;
     transform: translate(-50%, -50%) scaleY(1.5);
     width: 6.2vw;
     text-align: center;
@@ -59,6 +59,7 @@ html, body {
     white-space: nowrap;
     margin: 0;
     padding: 0;
+    font-size :5.8vh;
 }
 
 .bt-icon-wrapper{

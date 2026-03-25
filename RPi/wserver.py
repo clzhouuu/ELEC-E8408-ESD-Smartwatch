@@ -4,6 +4,7 @@ from flask import jsonify
 from flask import Response
 from flask import request
 import outbound_package
+from datetime import date, timedelta, datetime
 
 import db
 import hike
@@ -20,7 +21,6 @@ if metrics:
 @app.route('/')
 def get_home():
     sessions = hdb.get_sessions() 
-    bt = hubbt.connected
     return render_template('home.html', sessions=sessions)
 
 @app.route('/session-page')
@@ -36,12 +36,15 @@ def get_session(id='latest'):
 @app.route('/history-page')
 def get_history():
     sessions = hdb.get_sessions() 
+    total = best = avg = None
     if sessions:
+        start_of_week = date.today() - timedelta(days=date.today().weekday())
+        weekly_sessions = [s for s in sessions if (datetime.strptime(s.date, "%d-%m-%Y").date()) >= start_of_week]
         total = {
-            'km': round(sum(s.km for s in sessions), 1),
-            'steps': sum(s.steps for s in sessions),
-            'kcal': int(sum(s.kcal for s in sessions))
-        }
+            'km': round(sum(s.km for s in weekly_sessions), 1),
+            'steps': sum(s.steps for s in weekly_sessions),
+            'kcal': int(sum(s.kcal for s in weekly_sessions))
+        } if weekly_sessions else {'km': 0, 'steps': 0, 'kcal': 0}
         best = max(sessions, key=lambda s: s.km)
         avg = {
             'km': round(sum(s.km for s in sessions) / len(sessions), 1),

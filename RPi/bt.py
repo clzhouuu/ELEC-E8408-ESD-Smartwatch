@@ -160,9 +160,9 @@ class HubBluetooth:
         hs.id         = int(parts[0])
         hs.steps      = int(parts[1])
         hs.km         = float(parts[2])
-        hs.duration   = str(parts[3])  
-        hs.date       = str(parts[4]) 
-        hs.start_time = str(parts[5])  
+        hs.duration   = str(parts[3]) 
+        hs.date       = str(parts[4])
+        hs.start_time = str(parts[5]) 
 
         def cvt_coord(c):
             sc = c.split(',')

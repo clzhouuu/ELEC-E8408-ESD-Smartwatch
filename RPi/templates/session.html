@@ -30,19 +30,34 @@
             }
         </script>
         <session-data>
+            <div class="navigation">
+                <div class="page" data-page="/">Home</div>
+                <div class="page" data-page="/history-page">Hiking History</div>
+            </div>
             <div id="image">
-                 <img src="/static/images/session-image.png" class="session-image">
+                <img src="/static/images/{% if session %}session{{ ((session.id) % 3) + 1 }}.jpeg{% else %}session1.jpeg{% endif %}" class="session-image">
             </div>
             <info>
                 <text class="session">Session #{% if session %}{{ session.id }}{% else %}-{% endif %}</text>
-                <text class="date">&nbsp {% if session %}{{ session.date }}{% else %}-{% endif %}</text>
+                <text class="date">{% if session %}{{ session.date }}{% else %}-{% endif %}</text>
                 <text class="space">&nbsp</text>
-                <text class="time">Duration: &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
-                <text class="step">Stepcount:  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
-                <text class="distance">Travelled Distance: &nbsp &nbsp {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
-                <text class="calories">Burned Calories: &nbsp  {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
+                <text class="time">Duration: {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
+                <text class="step">Stepcount: {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
+                <text class="distance">Travelled Distance: {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
+                <text class="calories">Burned Calories: {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
             </info>
         </session-data>
+        <script>
+             const pages = document.querySelectorAll('.page');
+                pages.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const data = item.getAttribute('data-page');
+                        if (data) {
+                            window.location.href = data;
+                        }
+                    });
+                });
+        </script>
     </body>
 </html>
 
