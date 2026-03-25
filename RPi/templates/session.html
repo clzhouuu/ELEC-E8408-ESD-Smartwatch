@@ -31,15 +31,15 @@
         </script>
         <session-data>
             <div id="image">
-                 <img src="/static/images/session-image.png" class="session-image">
+                <img src="/static/images/{% if session %}session{{ ((session.id) % 3) + 1 }}.jpeg{% else %}session1.jpeg{% endif %}" class="session-image">
             </div>
             <info>
                 <text class="session">Session #{% if session %}{{ session.id }}{% else %}-{% endif %}</text>
                 <text class="date">&nbsp {% if session %}{{ session.date }}{% else %}-{% endif %}</text>
                 <text class="space">&nbsp</text>
-                <text class="time">Duration: &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
+                <text class="time">Duration: &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.duration }}{% else %}-{% endif %}</text>
                 <text class="step">Stepcount:  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp {% if session %}{{ session.steps }}{% else %}-{% endif %}</text>
-                <text class="distance">Travelled Distance: &nbsp &nbsp {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
+                <text class="distance">Travelled Distance: &nbsp {% if session %}{{ session.km }} km{% else %}-{% endif %}</text>
                 <text class="calories">Burned Calories: &nbsp  {% if session %}{{ session.kcal | int }} kcal{% else %}-{% endif %}</text>
             </info>
         </session-data>

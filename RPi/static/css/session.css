@@ -14,10 +14,10 @@ html, body { height: 100%; margin: 0; }
 
 session-data{
     font-family: 'Oswald', sans-serif;
-    top: 5%;
+    top: 4%;
     left: 5%;
     height: 100%;
-    width: 18%;
+    width: 14%;
     position: absolute;
     flex-direction: column;
     display: flex;
@@ -39,7 +39,8 @@ info{
 }
 
 .session{
-    font-size: 6.6vh;
+    margin-top: 15%;
+    font-size: 5.2vh;
 
 }
 #image {
@@ -53,7 +54,6 @@ info{
 
 .session-image {
     width: 100%;
-    height: 25vh;
     display: block;
     border: none;
 }
@@ -62,9 +62,9 @@ info{
 .distance,
 .calories,
 .time {
-    font-size: 2.4vh;
+    font-size: 1.9vh;
     padding: 0vh;
-    margin: 1vh;
+    margin: 0.8vh;
     
 }
 

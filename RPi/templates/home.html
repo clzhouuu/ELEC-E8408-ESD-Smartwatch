@@ -79,19 +79,6 @@
             });
         });
         
-        function fitText(el) {
-            el.style.fontSize = '200px'; 
-            const scale = el.clientWidth / el.scrollWidth;
-            el.style.fontSize = `${200 * scale}px`;
-        }
-
-        document.fonts.ready.then(() => {
-            const totalEl = document.querySelector('.total');
-            if (totalEl) {
-                fitText(totalEl);
-            }
-        });
-        
         
         function checkIfChanged() {
             const changed =
