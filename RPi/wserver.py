@@ -36,9 +36,10 @@ def get_session(id='latest'):
 @app.route('/history-page')
 def get_history():
     sessions = hdb.get_sessions() 
+    total = best = avg = None
     if sessions:
         start_of_week = date.today() - timedelta(days=date.today().weekday())
-        weekly_sessions = [s for s in sessions if (datetime.strptime(s.date, "%Y-%m-%d").date()) >= start_of_week]
+        weekly_sessions = [s for s in sessions if (datetime.strptime(s.date, "%d-%m-%Y").date()) >= start_of_week]
         total = {
             'km': round(sum(s.km for s in weekly_sessions), 1),
             'steps': sum(s.steps for s in weekly_sessions),

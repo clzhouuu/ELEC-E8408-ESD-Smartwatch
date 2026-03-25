@@ -40,7 +40,7 @@
                         <td>{{ s.duration }}</td>
                         <td>{{ s.steps }}</td>
                         <td>{{ s.km }}</td>
-                        <td>{{ s.kcal }}</td>
+                        <td>{{ s.kcal | int }}</td>
                         <td>
                             <button class="delete-btn" onclick="deleteSession(event, {{ s.id }}, this)">✕</button>
                         </td>
@@ -79,7 +79,7 @@
                         </div>
                         <div class="stat-info">
                             <h1>Best</h1>
-                            <p>{{ best.km if best else '-' }} km</p>
+                            <p>{{ best.km | round(1) if best else '-' }} km</p>
                             <p>{{ best.steps if best else '-' }} steps</p>
                             <p>{{ best.kcal | int if best else '-' }} kcal</p>
                         </div>
