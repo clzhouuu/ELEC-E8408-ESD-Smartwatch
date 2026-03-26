@@ -18,7 +18,7 @@ void saveKcalToFile(uint32_t caloriesBurned) {
 }
 
 void saveDistanceToFile(float distance) {
-    char buffer[16]; dtostrf(distance, 6, 3, buffer);
+    char buffer[16]; dtostrf(distance, 0, 3, buffer);
     writeFile(LITTLEFS, "/distance.txt", buffer);
 }
 

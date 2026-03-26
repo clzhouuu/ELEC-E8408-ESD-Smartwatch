@@ -30,6 +30,8 @@ void sendSessionBT() {
     SerialBT.write(';');
     sendDataBT(LITTLEFS, "/coord.txt");
     SerialBT.write('\n');
+
+    Serial.println("/id.txt");
 }
 
 
@@ -51,7 +53,7 @@ void BTsync() {
     {
         unsigned long syncStart = millis();
 
-        while (millis() - syncStart < 5000) 
+        while (millis() - syncStart < 3000) 
         {
             if (SerialBT.available()) 
                 incomingChar = SerialBT.read();
@@ -65,7 +67,7 @@ void BTsync() {
                 lv_obj_t *scr_saved = lv_obj_create(NULL, NULL);
                 setBackground(scr_saved);
                 addHuippuLogo(scr_saved);
-                makeLabel(scr_saved, "SYNCHED", 61, 20, LV_COLOR_BLACK, FONT_MEDIUM);
+                makeLabel(scr_saved, "SYNCHED", 78, 20, LV_COLOR_BLACK, FONT_MEDIUM);
                 lv_scr_load(scr_saved);
                 lv_task_handler();
                 delay(3000);
@@ -103,7 +105,7 @@ void receiveBTConfig() {
     
     if (incoming.startsWith("CONFIG")) {
         int first  = incoming.indexOf(',');
-        int second = incoming.indexOf(';', first + 1);
+        int second = incoming.indexOf(',', first + 1);
         
         if (first != -1 && second != -1) {
             weight = incoming.substring(first + 1, second).toFloat();

@@ -315,8 +315,12 @@ void loop() {
                 makeLabel(warn_box, "WILL BE", 72, 90, LV_COLOR_BLACK, FONT_MEDIUM);
                 makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
                 lv_scr_load(scr_warn);
-                lv_task_handler();
-                delay(3000);
+
+                unsigned long warnStart = millis();
+                while (millis() - warnStart < 2000) {
+                    lv_task_handler();
+                }
+
                 lv_obj_del(scr_warn);
 
                 deleteSession();
@@ -336,11 +340,6 @@ void loop() {
     case 3:
     {
          /* Hiking session ongoing */
-        sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
-        sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
-        sessionStartMs = millis();
-        sessionDurationMs = 0;
-
         lv_obj_t *scr_start = lv_obj_create(NULL, NULL);
         setBackground(scr_start);
         makeLabel(scr_start, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
@@ -363,6 +362,11 @@ void loop() {
         lv_label_set_text(lbl_kcal_val, "0kcal");
         lv_label_set_text(lbl_dur_val, "00:00:00");
         lv_label_set_text(lbl_hike_low_batt, "");
+
+        sessionStartDate = String(rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
+        sessionStartTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_HMS));
+        sessionStartMs = millis();
+        sessionDurationMs = 0;
 
         // reset counters
         sensor->resetStepCounter();
@@ -445,6 +449,7 @@ void loop() {
 
 
         }
+
         break;
     }
 
@@ -463,8 +468,6 @@ void loop() {
 
         sessionStored = true;
         sessionSent = false;
-
-        delay(3000);
 
         // bt sync
         if (SerialBT.hasClient()) {

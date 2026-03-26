@@ -267,7 +267,7 @@ void buildSavingScreen() {
     setBackground(scr_saving);
 
     makeLabel(scr_saving, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
-    makeLabel(scr_saving, "SAVING...", 60, 105, LV_COLOR_BLACK, FONT_HUGE);
+    makeLabel(scr_saving, "Saving...", 68, 105, LV_COLOR_BLACK, FONT_MEDIUM);
 }
 
 // sync screen
@@ -278,5 +278,5 @@ void buildSyncScreen() {
 
     makeLabel(scr_sync, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
     // "Sending..." centered
-    makeLabel(scr_sync, "Sending...", 80, 108, LV_COLOR_BLACK, FONT_MEDIUM);
+    makeLabel(scr_sync, "Sending...", 68, 108, LV_COLOR_BLACK, FONT_MEDIUM);
 }

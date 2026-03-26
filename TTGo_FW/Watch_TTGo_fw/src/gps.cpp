@@ -39,7 +39,7 @@ void saveGpsPointsToFile() {
         file.print(gpsPoints[i].lon, 6); 
         file.print(",");
         file.print(gpsPoints[i].alt, 2); 
-        file.print(";\n");
+        file.print(";");
     }
 
     lastSavedIndex = gpsPointCount;
