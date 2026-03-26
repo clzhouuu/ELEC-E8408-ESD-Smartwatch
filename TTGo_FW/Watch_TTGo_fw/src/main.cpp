@@ -264,7 +264,7 @@ void loop() {
                 if (msg == 'c') {
                     BTsync();
                 } else {
-                    receiveBTonfig();
+                    receiveBTConfig();
                 }
             }
 

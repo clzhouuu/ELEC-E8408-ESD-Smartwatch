@@ -67,6 +67,9 @@ class HubBluetooth:
         while True:
             try:
                 chunk = self.sock.recv(1024)
+                if chunk == b'r':
+                    print("Watch ACKed config update")
+                    continue
 
                 messages = chunk.split(b'\n')
                 messages[0] = remainder + messages[0]
@@ -104,17 +107,17 @@ class HubBluetooth:
         """Sends a SendPackage (weight, height) to the Watch."""
         if not self.connected:
             print("WARNING: Cannot send, not connected to Watch.")
-            return
+            return False
         try:
             message = f"CONFIG,{pkg.weight},{pkg.height}\n"
             self.sock.send(message.encode('utf-8'))
-            ack = self.sock.recv(1)
-            if ack != b'r':
-                print(f"WARNING: Unexpected acknowledgment: {ack}")
+            print(f"sent config to watch: {message.strip()}")
+            return True
         except bluetooth.btcommon.BluetoothError as e:
             print(f"Bluetooth error while sending: {e}")
             self.connected = False
             self.sock.close()
+            return False
     
     @staticmethod
     def messages_to_sessions(messages: list[bytes]) -> list[hike.HikeSession]:
