@@ -6,16 +6,39 @@ int lastSavedIndex = 0;
 
 // GPS
 void logGps() {
-    watch->gpsHandler();
-    if (!gps) return;
+    int last = 0;
 
-    if (!gps->location.isValid() || 
-        !gps->location.isUpdated() ||
+    watch->gpsHandler();
+
+    if (!gps) { Serial.println("GPS: null ptr"); return; }
+
+    if (!gps->location.isValid()) { 
+        Serial.print("Chars: ");
+        Serial.println(gps->charsProcessed());
+
+        Serial.print("Satellite value: ");
+        Serial.println(gps->satellites.value());
+
+        Serial.print("HDOP value: ");
+        Serial.println(gps->hdop.value());
+        
+        Serial.println("GPS: location invalid"); 
+
+        return; }
+    if (!gps->altitude.isValid()) { Serial.println("GPS: altitude invalid"); return; }
+
+
+
+    if (!gps) {
+        return;
+    }
+
+    if (!gps->location.isValid() ||
         !gps->altitude.isValid()) {
         return;
     }
 
-    if (millis() - lastGpsSave < 3000) return;
+    if (millis() - lastGpsSave < 10000) return; 
 
     lastGpsSave = millis();
 

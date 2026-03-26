@@ -22,9 +22,9 @@ void sendSessionBT() {
     SerialBT.write(';');
     sendDataBT(LITTLEFS, "/steps.txt"); 
     SerialBT.write(';');
-    sendDataBT(LITTLEFS, "/kcal.txt");
-    SerialBT.write(';');
     sendDataBT(LITTLEFS, "/distance.txt"); 
+    SerialBT.write(';');
+    sendDataBT(LITTLEFS, "/kcal.txt");
     SerialBT.write(';');
     sendDataBT(LITTLEFS, "/datetime.txt");
     SerialBT.write(';');
@@ -53,7 +53,7 @@ void BTsync() {
     {
         unsigned long syncStart = millis();
 
-        while (millis() - syncStart < 3000) 
+        while (millis() - syncStart < 5000) 
         {
             if (SerialBT.available()) 
                 incomingChar = SerialBT.read();
@@ -67,10 +67,16 @@ void BTsync() {
                 lv_obj_t *scr_saved = lv_obj_create(NULL, NULL);
                 setBackground(scr_saved);
                 addHuippuLogo(scr_saved);
-                makeLabel(scr_saved, "SYNCHED", 78, 20, LV_COLOR_BLACK, FONT_MEDIUM);
+                makeLabel(scr_saved, "SENT", 78, 105, LV_COLOR_BLACK, FONT_MEDIUM);
                 lv_scr_load(scr_saved);
                 lv_task_handler();
-                delay(3000);
+
+                unsigned long savedStart = millis();
+                while (millis() - savedStart < 2000) {
+                    lv_task_handler();
+                }
+
+                lv_scr_load(scr_idle);
                 lv_obj_del(scr_saved);
                 
                 deleteSession();
@@ -85,12 +91,17 @@ void BTsync() {
         setBackground(scr_savedFail);
         addHuippuLogo(scr_savedFail);
         lv_obj_t *fail_box = makeCard(scr_savedFail, 15, 45, 210, 150, 16);
-        makeLabel(fail_box, "SYNC FAILED", 61, 20, LV_COLOR_BLACK, FONT_MEDIUM);
+        makeLabel(fail_box, "SYNC FAILED", 62, 20, LV_COLOR_BLACK, FONT_MEDIUM);
         makeLabel(fail_box, "Session saved", 44, 60, LV_COLOR_BLACK, FONT_MEDIUM);
         makeLabel(fail_box, "on device", 66, 95, LV_COLOR_BLACK, FONT_MEDIUM);
         lv_scr_load(scr_savedFail);
         lv_task_handler();
-        delay(3000);
+
+        unsigned long failedStart = millis();
+        while (millis() - failedStart < 2000) {
+            lv_task_handler();
+        }
+
         lv_obj_del(scr_savedFail);
     }
 }

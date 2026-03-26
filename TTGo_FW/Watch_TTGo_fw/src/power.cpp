@@ -3,14 +3,42 @@
 #include "globals.h"
 
 // battery
+#include "math.h"
+
+#define BATTERY_DEADBAND_THRESHOLD 20.0 // Threshold for battery percentage deadband in mV
+float last_battery_percentage = -1.0; // Initialize to an invalid percentage to ensure the first reading is processed
+
+// battery
 void readBattery() {
     s_isCharging = watch->power->isVBUSPlug() || watch->power->isChargeing();
-
-    if (s_isCharging) {
-        batteryPercent = watch->power->getBattPercentage();
-    } else {
-        batteryPercent = constrain((int)((watch->power->getBattVoltage() / 1000.0f - 3.3f) / 0.9f * 100), 0, 100);
+    float raw_percentage = 0.0; // buffer for percentage calculation
+    float voltage_mV = watch->power->getBattVoltage();
+    
+    if (voltage_mV >= 4200.0) {
+        raw_percentage = 100;
+    } else if (voltage_mV <= 3300.0) {
+        raw_percentage = 0;
+    } else if (voltage_mV > 3800.0) { //4200-3800 mV section 1 100% to 40%:
+    raw_percentage = 40.0 + ((voltage_mV - 3800.0) * 60.0 / 400.0);
+    } else { //3800-3300 mV section 2 40% to 0%:
+        raw_percentage = ((voltage_mV - 3300.0) * 40.0 / 500.0);
     }
+
+    // Deadband filter to prevent fluctuations
+    if (last_battery_percentage < 0.0) {
+        // Init (bypass deadband)
+        last_battery_percentage = raw_percentage; 
+    } else {
+        // Calculate the fluctuation
+        float delta = fabs(raw_percentage - last_battery_percentage);
+        
+        // Update based on deadband threshold
+        if (delta >= BATTERY_DEADBAND_THRESHOLD) {
+            last_battery_percentage = raw_percentage;
+        }
+    }
+
+    batteryPercent = constrain((int)last_battery_percentage, 0, 100);
 }
 
 // screen sleep

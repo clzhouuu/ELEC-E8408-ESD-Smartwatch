@@ -9,6 +9,7 @@ extern TinyGPSPlus *gps;
 extern BluetoothSerial SerialBT;
 
 extern volatile uint8_t state;
+extern int lastSavedIndex;
 
 // battery variables
 extern int batteryPercent;

@@ -148,19 +148,19 @@ void buildIdleScreen() {
 
     makeLabel(scr_idle, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
 
-    lbl_idle_bigtime = makeLabel(scr_idle, "00:00", 82, 60, LV_COLOR_BLACK, FONT_HUGE);
-    lbl_idle_date = makeLabel(scr_idle, "00-00-0000", 72, 98, LV_COLOR_BLACK, FONT_MEDIUM);
+    lbl_idle_bigtime = makeLabel(scr_idle, "00:00", 84, 80, LV_COLOR_BLACK, FONT_HUGE);
+    lbl_idle_date = makeLabel(scr_idle, "00-00-0000", 72, 118, LV_COLOR_BLACK, FONT_MEDIUM);
 
-    lbl_idle_bt_icon = makeLabel(scr_idle, LV_SYMBOL_BLUETOOTH, 68, 122, LV_COLOR_MAKE(0xAA,0xAA,0xAA), FONT_SMALL);
-    lbl_idle_gps_icon = makeLabel(scr_idle, LV_SYMBOL_GPS, 88, 122, LV_COLOR_MAKE(0xAA,0xAA,0xAA), FONT_SMALL);
-    lbl_idle_batt_icon = makeLabel(scr_idle, LV_SYMBOL_BATTERY_FULL, 108, 122, LV_COLOR_BLACK, FONT_SMALL);
-    lbl_idle_batt_pct = makeLabel(scr_idle, "100%", 128, 122, LV_COLOR_BLACK, FONT_SMALL);
-    lbl_idle_charge_icon = makeLabel(scr_idle, chargeIcon(), 166, 122, LV_COLOR_BLACK, FONT_SMALL);
+    lbl_idle_bt_icon = makeLabel(scr_idle, LV_SYMBOL_BLUETOOTH, 68, 142, LV_COLOR_MAKE(0xAA,0xAA,0xAA), FONT_SMALL);
+    lbl_idle_gps_icon = makeLabel(scr_idle, LV_SYMBOL_GPS, 88, 142, LV_COLOR_MAKE(0xAA,0xAA,0xAA), FONT_SMALL);
+    lbl_idle_batt_icon = makeLabel(scr_idle, LV_SYMBOL_BATTERY_FULL, 108, 142, LV_COLOR_BLACK, FONT_SMALL);
+    lbl_idle_batt_pct = makeLabel(scr_idle, "100%", 128, 142, LV_COLOR_BLACK, FONT_SMALL);
+    lbl_idle_charge_icon = makeLabel(scr_idle, chargeIcon(), 166, 142, LV_COLOR_BLACK, FONT_SMALL);
 
 
     lv_obj_t *btn_start = lv_btn_create(scr_idle, NULL);
-    lv_obj_set_size(btn_start, 120, 44);
-    lv_obj_set_pos(btn_start, 64, 160);
+    lv_obj_set_size(btn_start, 200, 34);
+    lv_obj_set_pos(btn_start, 20, 190);
     lv_obj_set_event_cb(btn_start, startHikeBtnEvent);
 
     lv_obj_set_style_local_bg_color(btn_start, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
@@ -199,6 +199,7 @@ void buildHikeScreen() {
     scr_hike = lv_obj_create(NULL, NULL);
     setBackground(scr_hike);
 
+    // top bar
     makeLabel(scr_hike, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
     lbl_hike_bt_icon = makeLabel(scr_hike, LV_SYMBOL_BLUETOOTH, 70, 8, LV_COLOR_MAKE(0xAA,0xAA,0xAA), FONT_SMALL); 
     lbl_hike_gps = makeLabel(scr_hike, LV_SYMBOL_GPS, 90, 8, LV_COLOR_MAKE(0xAA,0xAA,0xAA), FONT_SMALL);
@@ -206,29 +207,29 @@ void buildHikeScreen() {
     lbl_hike_charge_icon = makeLabel(scr_hike, chargeIcon(), 144, 8, LV_COLOR_BLACK, FONT_SMALL);
     lbl_hike_batt_pct = makeLabel(scr_hike, "100%", 158, 8, LV_COLOR_BLACK, FONT_SMALL);
 
+    // defaults
     makeLabel(scr_hike, "\xB7", 197, 8, LV_COLOR_BLACK, FONT_SMALL);
     lbl_hike_toptime = makeLabel(scr_hike, "00:00", 195, 8, LV_COLOR_BLACK, FONT_SMALL);
 
     lbl_hike_low_batt = makeLabel(scr_hike, "", 68, 36, LV_COLOR_BLACK, FONT_SMALL);
 
-    lbl_dur_val = makeLabel(scr_hike, "00:00:00", 54, 90, LV_COLOR_BLACK, FONT_HUGE);
+    lbl_dur_val = makeLabel(scr_hike, "00:00:00", 52, 80, LV_COLOR_BLACK, FONT_HUGE);
 
-    lv_obj_t *card = makeCard(scr_hike, 10, 148, 220, 78, 16);
+    lv_obj_t *card = makeCard(scr_hike, 10, 120, 220, 58, 16);
 
-    makeLabel(card, MY_SYMBOL_STEPS, 37, 12, LV_COLOR_BLACK, &steps);
-    makeLabel(card, MY_SYMBOL_PERSON, 106, 12, LV_COLOR_BLACK, &person);
-    makeLabel(card, MY_SYMBOL_FIRE, 167, 12, LV_COLOR_BLACK, &fire);
+    makeLabel(card, MY_SYMBOL_STEPS, 37, 10, LV_COLOR_BLACK, &steps);
+    makeLabel(card, MY_SYMBOL_PERSON, 106, 10, LV_COLOR_BLACK, &person);
+    makeLabel(card, MY_SYMBOL_FIRE, 167, 10, LV_COLOR_BLACK, &fire);
 
-    lbl_steps_val = makeLabel(card, "0", 35, 44, LV_COLOR_BLACK, FONT_SMALL);
-    lbl_dist_val = makeLabel(card, "0.0km", 85, 44, LV_COLOR_BLACK, FONT_SMALL);
-    lbl_kcal_val = makeLabel(card, "0kcal", 157, 44, LV_COLOR_BLACK, FONT_SMALL);
+    lbl_steps_val = makeLabel(card, "0", 35, 38, LV_COLOR_BLACK, FONT_SMALL);
+    lbl_dist_val = makeLabel(card, "0.0km", 85, 38, LV_COLOR_BLACK, FONT_SMALL);
+    lbl_kcal_val = makeLabel(card, "0kcal", 157, 38, LV_COLOR_BLACK, FONT_SMALL);
     
     lv_obj_t *btn_end = lv_btn_create(scr_hike, NULL);
-    lv_obj_set_size(btn_end, 120, 44);
-    lv_obj_set_pos(btn_end, 64, 40);
+    lv_obj_set_size(btn_end, 200, 34);
+    lv_obj_set_pos(btn_end, 20, 190);
     lv_obj_set_event_cb(btn_end, endHikeBtnEvent);
 
-    // glass-like card style
     lv_obj_set_style_local_bg_color(btn_end, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
     lv_obj_set_style_local_bg_opa(btn_end, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_30);
 
@@ -240,7 +241,6 @@ void buildHikeScreen() {
     lv_obj_set_style_local_border_color(btn_end, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
     lv_obj_set_style_local_border_opa(btn_end, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_20);
 
-    // optional soft shadow
     lv_obj_set_style_local_shadow_width(btn_end, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, 8);
     lv_obj_set_style_local_shadow_opa(btn_end, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_20);
 
@@ -249,7 +249,6 @@ void buildHikeScreen() {
     lv_obj_set_style_local_text_color(lbl_end, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
     lv_obj_align(lbl_end, btn_end, LV_ALIGN_CENTER, 0, 0);
 
-    // invisible wake layer behind everything
     lv_obj_t *wake_hike = lv_btn_create(scr_hike, NULL);
     lv_obj_set_size(wake_hike, 240, 240);
     lv_obj_set_pos(wake_hike, 0, 0);
@@ -267,7 +266,7 @@ void buildSavingScreen() {
     setBackground(scr_saving);
 
     makeLabel(scr_saving, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
-    makeLabel(scr_saving, "Saving...", 68, 105, LV_COLOR_BLACK, FONT_MEDIUM);
+    makeLabel(scr_saving, "Saving...", 78, 105, LV_COLOR_BLACK, FONT_MEDIUM);
 }
 
 // sync screen
@@ -278,5 +277,5 @@ void buildSyncScreen() {
 
     makeLabel(scr_sync, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
     // "Sending..." centered
-    makeLabel(scr_sync, "Sending...", 68, 108, LV_COLOR_BLACK, FONT_MEDIUM);
+    makeLabel(scr_sync, "Sending...", 78, 105, LV_COLOR_BLACK, FONT_MEDIUM);
 }

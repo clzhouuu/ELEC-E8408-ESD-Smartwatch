@@ -104,11 +104,13 @@ void startHikeBtnEvent(lv_obj_t *obj, lv_event_t event) {
     if (event != LV_EVENT_CLICKED) return;
 
     if (screenAsleep) {
-        requestTouchWake();
+        screenWake();
         return;
     }
 
-    lastActivity = millis();
+    static unsigned long lastPress = 0;
+    if (millis() - lastPress < 1000) return;
+    lastPress = millis();
 
     if (state == 1) {
         state = 2;
@@ -123,7 +125,9 @@ void endHikeBtnEvent(lv_obj_t *obj, lv_event_t event) {
         return;
     }
 
-    lastActivity = millis();
+    static unsigned long lastPress = 0;
+    if (millis() - lastPress < 1000) return;
+    lastPress = millis();
 
     if (state == 3) {
         sessionEndTime = String(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
@@ -182,6 +186,11 @@ void setup() {
         String(__TIME__).substring(6, 8).toInt()   
     );
 
+    if (!gps) { Serial.println("GPS: null ptr"); return; }
+    if (!gps->location.isValid()) { Serial.println("GPS: location invalid"); return; }
+    if (!gps->altitude.isValid()) { Serial.println("GPS: altitude invalid"); return; }
+
+
     sessionId = 1;
     state = 1;
     lastActivity = millis(); 
@@ -223,9 +232,6 @@ void loop() {
         while (1) 
         {
             lv_task_handler();
-            if (gps) {
-                watch->gpsHandler();
-            }
 
             if (!screenAsleep && millis() - lastActivity > SLEEP_TIMEOUT_MS) {
                 screenSleep();
@@ -245,13 +251,20 @@ void loop() {
                 setGpsIconColor(lbl_idle_gps_icon);
             }
 
+            // while (Serial1.available()) {
+            //     char c = Serial1.read();
+            //     Serial.write(c);
+            // }
+
+
+
             /* Bluetooth sync */
             if (SerialBT.available()) {
                 int msg = SerialBT.peek();
                 if (msg == 'c') {
                     BTsync();
                 } else {
-                    receiveBTConfig();
+                    receiveBTonfig();
                 }
             }
 
@@ -264,7 +277,7 @@ void loop() {
                 gps->date.isUpdated() &&
                 gps->time.isUpdated() &&
                 gps->location.isValid() &&
-                gps->location.age() < 3000)
+                gps->location.age() < 10000)
             {
                 int year   = gps->date.year();
                 int month  = gps->date.month();
@@ -296,38 +309,41 @@ void loop() {
         /* Hiking session initialisation */
 
         // Checking for previous session and resyncing
-        
-        if (sessionStored) {
-            if (SerialBT.hasClient()) {
-                Serial.println("Retrying sync");
-                lv_scr_load(scr_sync);
-                lv_task_handler();
-                BTsync();
-            }
- 
-            if (sessionStored) {
-                lv_obj_t *scr_warn = lv_obj_create(NULL, NULL);
-                setBackground(scr_warn);
-                addHuippuLogo(scr_warn);
-                lv_obj_t *warn_box = makeCard(scr_warn, 15, 40, 210, 160, 16);
-                makeLabel(warn_box, "CAUTION!", 28, 12, LV_COLOR_BLACK, FONT_HUGE);
-                makeLabel(warn_box, "UNSYNCED SESSION", 20, 68, LV_COLOR_BLACK, FONT_MEDIUM);
-                makeLabel(warn_box, "WILL BE", 72, 90, LV_COLOR_BLACK, FONT_MEDIUM);
-                makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
-                lv_scr_load(scr_warn);
 
-                unsigned long warnStart = millis();
-                while (millis() - warnStart < 2000) {
-                    lv_task_handler();
-                }
+        lv_obj_t *scr_start = lv_obj_create(NULL, NULL);
+        setBackground(scr_start);
+        makeLabel(scr_start, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
+        makeLabel(scr_start, "Starting hike", 65, 108, LV_COLOR_BLACK, FONT_MEDIUM);
+        lv_scr_load(scr_start);
+        lv_task_handler();
 
-                lv_obj_del(scr_warn);
-
-                deleteSession();
-
-            }
+        unsigned long startTime = millis();
+        while (millis() - startTime < 2000) {
+            lv_task_handler();
         }
 
+ 
+        if (sessionStored) {
+            lv_obj_t *scr_warn = lv_obj_create(NULL, NULL);
+            setBackground(scr_warn);
+            addHuippuLogo(scr_warn);
+            lv_obj_t *warn_box = makeCard(scr_warn, 15, 40, 210, 160, 16);
+            makeLabel(warn_box, "CAUTION!", 30, 12, LV_COLOR_BLACK, FONT_HUGE);
+            makeLabel(warn_box, "UNSYNCED SESSION", 20, 68, LV_COLOR_BLACK, FONT_MEDIUM);
+            makeLabel(warn_box, "WILL BE", 72, 90, LV_COLOR_BLACK, FONT_MEDIUM);
+            makeLabel(warn_box, "OVERWRITTEN", 40, 112, LV_COLOR_BLACK, FONT_MEDIUM);
+            lv_scr_load(scr_warn);
+
+            unsigned long warnStart = millis();
+            while (millis() - warnStart < 2000) {
+                lv_task_handler();
+            }
+
+            lv_obj_del(scr_warn);
+            deleteSession();
+        }
+
+        lv_obj_del(scr_start);
         gpsPointCount = 0;
         lastGpsSave = 0;
         lastGpsFileSave = 0;
@@ -340,14 +356,6 @@ void loop() {
     case 3:
     {
          /* Hiking session ongoing */
-        lv_obj_t *scr_start = lv_obj_create(NULL, NULL);
-        setBackground(scr_start);
-        makeLabel(scr_start, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
-        makeLabel(scr_start, "Starting hike", 65, 108, LV_COLOR_BLACK, FONT_MEDIUM);
-        lv_scr_load(scr_start);
-        lv_task_handler();
-        delay(3000);
-        lv_obj_del(scr_start);
 
         lv_scr_load(scr_hike);
 
@@ -486,11 +494,16 @@ void loop() {
             addHuippuLogo(scr_nobt);
             lv_obj_t *nobt_box = makeCard(scr_nobt, 15, 45, 210, 150, 16);
             makeLabel(nobt_box, "SAVED!", 48, 15, LV_COLOR_BLACK, FONT_HUGE);
-            makeLabel(nobt_box, "Connect BT to", 50, 75, LV_COLOR_BLACK, FONT_MEDIUM);
-            makeLabel(nobt_box, "sync session", 58, 98, LV_COLOR_BLACK, FONT_MEDIUM);
+            makeLabel(nobt_box, "No BT connection", 35, 75, LV_COLOR_BLACK, FONT_MEDIUM);
+            makeLabel(nobt_box, "to sync session", 50, 98, LV_COLOR_BLACK, FONT_MEDIUM);
             lv_scr_load(scr_nobt);
             lv_task_handler();
-            delay(3000);
+
+            unsigned long nobtTime = millis();
+            while (millis() - nobtTime < 2000) {
+                lv_task_handler();
+            }
+
             lv_obj_del(scr_nobt);
         } 
 
