@@ -23,42 +23,45 @@
         <div class="content">
             <div class="history-column">
                 <h1>SESSION LOG</h1>
-                <table class="history-table">
-                    <tr class="header">
-                        <th>ID</th>
-                        <th>Date</th>
-                        <th>Starting time</th>
-                        <th>Duration</th>
-                        <th>Steps</th>
-                        <th>Distance (km)</th>
-                        <th>Calories (kcal) </th>
-                    {% for s in sessions %}
-                    <tr class="session-row" onclick="window.location.href='/session-page/{{ s.id }}'">
-                        <td>{{ s.id }}</td>
-                        <td>{{ s.date }}</td>
-                        <td>{{ s.start_time }}</td>
-                        <td>{{ s.duration }}</td>
-                        <td>{{ s.steps }}</td>
-                        <td>{{ s.km }}</td>
-                        <td>{{ s.kcal | int }}</td>
-                        <td>
-                            <button class="delete-btn" onclick="deleteSession(event, {{ s.id }}, this)">✕</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% for i in range(12 - sessions|length) %}
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </div>
+                <div class="tbl">
+                    <table class="history-table">
+                        <tr class="header">
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Starting time</th>
+                            <th>Duration</th>
+                            <th>Steps</th>
+                            <th>Distance (km)</th>
+                            <th>Calories (kcal) </th>
+                            <th></th>
+                        {% for s in sessions | reverse %}
+                        <tr class="session-row" onclick="window.location.href='/session-page/{{ s.id }}'">
+                            <td>{{ s.id }}</td>
+                            <td>{{ s.date }}</td>
+                            <td>{{ s.start_time }}</td>
+                            <td>{{ s.duration }}</td>
+                            <td>{{ s.steps }}</td>
+                            <td>{{ s.km }}</td>
+                            <td>{{ s.kcal | int }}</td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteSession(event, {{ s.id }}, this)">✕</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for i in range(12 - sessions|length) %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+             </div>
             <div class="stats-column">
                 <h1> STATISTICS </h1>
                 <div class="stats">

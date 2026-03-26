@@ -14,12 +14,12 @@ html, body { height: 100%; margin: 0; }
 
 .navigation{
     font-family: 'Oswald', sans-serif;
-    font-size: 1.5vh;
+    font-size: 1rem;
     z-index: 1000;
     display: flex;
     flex-direction: row;
     width: 100%;
-    gap: 2vh;
+    gap: 15px;
 }
 .page:hover {
     color: #007AA1;
@@ -29,7 +29,7 @@ session-data{
     top: 4%;
     left: 5%;
     height: 100%;
-    width: 14%;
+    width: 250px;
     position: absolute;
     flex-direction: column;
     display: flex;
@@ -38,12 +38,12 @@ session-data{
 
 
 info{
-    height: 30%;
+    height: 350px;
     top: 1%;
     width: 85%;
     background-color: white;
-    padding: 0vh 3vh;
-    border-radius: 0.5vh;
+    padding: 0px 27.5px;
+    border-radius: 5px;
     position: relative;
     flex-direction: column;
     display: flex;
@@ -52,13 +52,13 @@ info{
 
 .session{
     margin-top: 15%;
-    font-size: 5.2vh;
+    font-size: 2.8rem;
 
 }
 #image {
     margin-top: 7%;
     background-color: white;
-    padding: 1.5vh 1.5vh 4vh 1.5vh;
+    padding: 15px 15px 40px 15px;
     border-radius: 0.5vh;
     box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
     width: 95%;
@@ -75,11 +75,11 @@ info{
 .distance,
 .calories,
 .time {
-    font-size: 1.9vh;
+    font-size: 1.3rem;
     
 }
 
 .date{
-    font-size: 1.5vh;
+    font-size: 0.8rem;
 
 }

@@ -3,7 +3,7 @@
 body{
     font-family: "Oswald", sans-serif;
     color: #1f1f1f;
-    font-size: 2vh;
+    font-size: 1rem;
     position: relative;
     width: 100vw;                
     height: 100vh;               
@@ -15,14 +15,14 @@ body{
 
 .navigation{
     font-family: 'Oswald', sans-serif;
-    font-size: 1.5vh;
+    font-size: 1 rem;
     z-index: 1000;
     display: flex;
     flex-direction: row;
     width: 100%;
-    gap: 2vh;
-    margin-left: 5vh;
-    margin-top: 4vh;
+    gap: 15px;
+    margin-left: 5%;
+    margin-top: 2%;
 }
 .page:hover {
     color: #007AA1;
@@ -31,8 +31,8 @@ body{
 .content{
     align-items: flex-start;
     display: flex;
-    margin-left: 5vh;
-    margin-top: 1vh;
+    margin-left: 5%;
+    margin-top: 0.5%;
 }
 
 .history-column{
@@ -40,31 +40,56 @@ body{
     flex-direction: column;
     width: 70%;
 }
+
+.tbl{
+    height: 660px;
+    overflow-y: auto;
+}
     
 h1{
     margin: 0vh 0;
     position: relative;
-    font-size: 2vh;
+    font-size: 1.5rem;
     color: white;
 }
 
 .history-table{
     background-color: rgba(255, 255, 255, 0.8);
     border-collapse: collapse;
-    padding: 2vh;
+    padding: 20px;
     border: 2px solid rgba(255, 255, 255);
+    table-layout: fixed;
+   
+    
 }
 
+.history-table th:nth-child(4),
+.history-table th:nth-child(3),
+.history-table th:nth-child(2){
+    width: 18%;
+
+}
+
+.history-table th:nth-child(8){
+    width: 4.4%;
+
+}
 
 .history-table th,
 .history-table td{
     padding: 14px;
-    text-align: left;
-    
+    text-align: left;   
+    width: 10.4%;
 }
 
 .history-table tr{
     border-bottom: 2px solid rgba(255, 255, 255);
+}
+.history-table th{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .history-table td{
@@ -92,33 +117,31 @@ h1{
 .stats-column {
     display: flex;
     flex-direction: column;
-    width: 20%;
-    margin-left: 3vw;
+    width: 280px;
+    margin-left: 50px;
 }
 
 .stats-column h1 {
     margin: 0vh 0;
 }
 
- .stats {   
+.stats {   
     background-color: rgba(255, 255, 255, 0.7);
-    padding: 2vh;
+    padding: 20px;
     border: 2px solid rgba(255, 255, 255);
 }
 
 .stat-card {
-    height: 13vh;
+    height: 135px;
     flex-direction: row;
     display: flex;
     align-items: center;
-    
-
 }
 
 .stats-image {
     position: relative;
     flex-shrink: 0;
-    width: 15vh;
+    width: 130px;
     display: block;
 }
 
@@ -130,12 +153,12 @@ h1{
 }
 .stat-info h1 {
     margin: 0vh 0;
-    font-size: 1.6vh;
+    font-size: 1rem;
     color: #1f1f1f;
 }
 .stat-info p {
     margin: 0vh 0;
-    font-size: 1.6vh;
+    font-size: 1rem;
     color: #1f1f1f;
 }
 
