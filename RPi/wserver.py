@@ -82,6 +82,7 @@ def save_settings():
     data = request.get_json()
     height = int(data['height'])
     weight = int(data['weight'])
+    print(f"Saving settings: height={height}, weight={weight}")
 
     hike.USER_HEIGHT = height
     hike.USER_WEIGHT = weight
