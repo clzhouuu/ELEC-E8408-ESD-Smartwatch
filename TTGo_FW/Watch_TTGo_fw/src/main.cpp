@@ -186,9 +186,9 @@ void setup() {
         String(__TIME__).substring(6, 8).toInt()   
     );
 
-    if (!gps) { Serial.println("GPS: null ptr"); return; }
-    if (!gps->location.isValid()) { Serial.println("GPS: location invalid"); return; }
-    if (!gps->altitude.isValid()) { Serial.println("GPS: altitude invalid"); return; }
+    if (!gps) { Serial.println("GPS: null ptr"); }
+    if (!gps->location.isValid()) { Serial.println("GPS: location invalid"); }
+    if (!gps->altitude.isValid()) { Serial.println("GPS: altitude invalid"); }
 
 
     sessionId = 1;
@@ -227,7 +227,7 @@ void loop() {
 
         lv_task_handler();
         
-        
+      
         //Bluetooth discovery
         while (1) 
         {
@@ -237,9 +237,14 @@ void loop() {
                 screenSleep();
             }
 
+            if (watch){
+                watch->gpsHandler();
+            }
+
             static unsigned long lastTick = 0;
             if (millis() - lastTick > 1000) {
                 lastTick = millis();
+
                 readBattery();
                 lv_label_set_text(lbl_idle_bigtime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
                 lv_label_set_text(lbl_idle_date, rtc->formatDateTime(PCF_TIMEFORMAT_DD_MM_YYYY));
@@ -251,12 +256,6 @@ void loop() {
                 setGpsIconColor(lbl_idle_gps_icon);
             }
 
-            // while (Serial1.available()) {
-            //     char c = Serial1.read();
-            //     Serial.write(c);
-            // }
-
-
 
             /* Bluetooth sync */
             if (SerialBT.available()) {
@@ -264,7 +263,7 @@ void loop() {
                 if (msg == 'c') {
                     BTsync();
                 } else {
-                    receiveBTonfig();
+                    receiveBTConfig();
                 }
             }
 
