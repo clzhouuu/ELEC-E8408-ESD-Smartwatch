@@ -8,8 +8,8 @@ def load_coords(path="coords_with_alt.txt"):
             line = line.strip()
             if not line:
                 continue
-            lat, lon, alt = line.split(",")
-            coords.append((float(lat), float(lon), float(alt)))
+            lat, lon = line.split(",")
+            coords.append((float(lat), float(lon)))
     return coords
 
 coords = load_coords("coords_with_alt.txt")
@@ -33,8 +33,6 @@ session.kcal = kcal
 session.duration = duration
 session.start_time = start_time
 session.date = date
-session.coords = coords
-
 session.coords = coords
 
 db = HubDatabase()

@@ -1,7 +1,7 @@
 #include "config.h"
 #include "globals.h"
 #include "screens.h"
-#include "image.c"
+#include "icons/image.c"
 
 
 // LVGL screens
@@ -96,6 +96,7 @@ lv_obj_t *makeLabel(lv_obj_t *parent, const char *text, int x, int y, lv_color_t
 
     return lbl;
 }
+
 // box template
 lv_obj_t *makeCard(lv_obj_t *parent, int x, int y, int w, int h, int radius) {
     lv_obj_t *card = lv_obj_create(parent, NULL);
@@ -146,6 +147,7 @@ void buildIdleScreen() {
     scr_idle = lv_obj_create(NULL, NULL);
     setBackground(scr_idle);
 
+    // top bar
     makeLabel(scr_idle, "HUIPPU", 8, 8, LV_COLOR_BLACK, FONT_SMALL);
 
     lbl_idle_bigtime = makeLabel(scr_idle, "00:00", 84, 80, LV_COLOR_BLACK, FONT_HUGE);
@@ -157,7 +159,7 @@ void buildIdleScreen() {
     lbl_idle_batt_pct = makeLabel(scr_idle, "100%", 128, 142, LV_COLOR_BLACK, FONT_SMALL);
     lbl_idle_charge_icon = makeLabel(scr_idle, chargeIcon(), 166, 142, LV_COLOR_BLACK, FONT_SMALL);
 
-
+    // button
     lv_obj_t *btn_start = lv_btn_create(scr_idle, NULL);
     lv_obj_set_size(btn_start, 200, 34);
     lv_obj_set_pos(btn_start, 20, 190);
@@ -182,6 +184,7 @@ void buildIdleScreen() {
     lv_obj_set_style_local_text_color(lbl_start, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
     lv_obj_align(lbl_start, btn_start, LV_ALIGN_CENTER, 0, 0);
 
+    // wake button
     lv_obj_t *wake_idle = lv_btn_create(scr_idle, NULL);
     lv_obj_set_size(wake_idle, 240, 240);
     lv_obj_set_pos(wake_idle, 0, 0);
@@ -213,6 +216,7 @@ void buildHikeScreen() {
 
     lbl_hike_low_batt = makeLabel(scr_hike, "", 68, 36, LV_COLOR_BLACK, FONT_SMALL);
 
+    // metrics
     lbl_dur_val = makeLabel(scr_hike, "00:00:00", 52, 80, LV_COLOR_BLACK, FONT_HUGE);
 
     lv_obj_t *card = makeCard(scr_hike, 10, 120, 220, 58, 16);
@@ -225,6 +229,7 @@ void buildHikeScreen() {
     lbl_dist_val = makeLabel(card, "0.0km", 85, 38, LV_COLOR_BLACK, FONT_SMALL);
     lbl_kcal_val = makeLabel(card, "0kcal", 157, 38, LV_COLOR_BLACK, FONT_SMALL);
     
+    // end hike button
     lv_obj_t *btn_end = lv_btn_create(scr_hike, NULL);
     lv_obj_set_size(btn_end, 200, 34);
     lv_obj_set_pos(btn_end, 20, 190);
@@ -249,6 +254,7 @@ void buildHikeScreen() {
     lv_obj_set_style_local_text_color(lbl_end, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
     lv_obj_align(lbl_end, btn_end, LV_ALIGN_CENTER, 0, 0);
 
+    // wake screen
     lv_obj_t *wake_hike = lv_btn_create(scr_hike, NULL);
     lv_obj_set_size(wake_hike, 240, 240);
     lv_obj_set_pos(wake_hike, 0, 0);

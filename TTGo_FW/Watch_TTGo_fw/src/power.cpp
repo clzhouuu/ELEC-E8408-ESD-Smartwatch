@@ -1,8 +1,6 @@
 #include "config.h"
 #include "power.h"
 #include "globals.h"
-
-// battery
 #include "math.h"
 
 #define BATTERY_DEADBAND_THRESHOLD 20.0 // Threshold for battery percentage deadband in mV
@@ -11,7 +9,7 @@ float last_battery_percentage = -1.0; // Initialize to an invalid percentage to 
 // battery
 void readBattery() {
     s_isCharging = watch->power->isVBUSPlug() || watch->power->isChargeing();
-    float raw_percentage = 0.0; // buffer for percentage calculation
+    float raw_percentage = 0.0; 
     float voltage_mV = watch->power->getBattVoltage();
     
     if (voltage_mV >= 4200.0) {
@@ -69,7 +67,7 @@ void shutDown() {
     esp_deep_sleep_start();
 }
 
-
+// initialize hike watch
 void initHikeWatch() {
     if (!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
         Serial.println("LITTLEFS Mount Failed"); return;

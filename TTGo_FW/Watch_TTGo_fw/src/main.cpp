@@ -1,5 +1,5 @@
 #include "config.h"
-#include "image.c"
+#include "icons/image.c"
 #include "globals.h"
 #include "bluetooth.h"
 #include "power.h"
@@ -208,8 +208,6 @@ void setup() {
     
     if (!gps) { Serial.println("GPS: null ptr"); }
     if (!gps->location.isValid()) { Serial.println("GPS: location invalid"); }
-    if (!gps->altitude.isValid()) { Serial.println("GPS: altitude invalid"); }
-
 
     sessionId = 1;
     state = 1;
@@ -355,6 +353,7 @@ void loop() {
          /* Hiking session ongoing */
 
         lv_scr_load(scr_hike);
+        watch->gpsHandler();
 
         // RTC sync     
         if (millis() - lastRtcSync > 60000) {
@@ -407,9 +406,9 @@ void loop() {
 
             lv_label_set_text(lbl_hike_toptime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
 
-            // GPS
-            logGps();
+            // GPS        
             if (millis() - lastGpsFileSave > 15000) {
+                logGps();
                 lastGpsFileSave = millis();
                 saveGpsPointsToFile();
             }

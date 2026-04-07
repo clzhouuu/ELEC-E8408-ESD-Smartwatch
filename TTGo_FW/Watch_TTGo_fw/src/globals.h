@@ -53,7 +53,6 @@ extern String durationStr;
 struct GpsPoint {
     double lat;
     double lon;
-    double alt;
 };
 
 static const int MAX_GPS_POINTS = 1000;

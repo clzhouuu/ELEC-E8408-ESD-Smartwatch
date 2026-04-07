@@ -106,6 +106,7 @@ void BTsync() {
     }
 }
 
+// receive BT config
 void receiveBTConfig() {
     if (!SerialBT.available()) {
         return;

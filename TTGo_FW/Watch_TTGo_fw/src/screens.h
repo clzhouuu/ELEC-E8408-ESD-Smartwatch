@@ -17,7 +17,6 @@ extern lv_obj_t *lbl_idle_btstate;
 extern lv_obj_t *lbl_idle_charge_icon;
 extern lv_obj_t *lbl_idle_date;
 
-
 // hike screen
 extern lv_obj_t *lbl_hike_toptime;
 extern lv_obj_t *lbl_hike_bt_icon; 
@@ -47,7 +46,7 @@ extern void buildHikeScreen();
 extern void buildSavingScreen();
 extern void buildSyncScreen();
 
-
+// event handlers
 extern void startHikeBtnEvent(lv_obj_t *obj, lv_event_t event);
 extern void endHikeBtnEvent(lv_obj_t *obj, lv_event_t event);
 extern void wakeTouchEvent(lv_obj_t *obj, lv_event_t event);
