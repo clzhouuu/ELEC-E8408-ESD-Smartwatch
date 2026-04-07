@@ -67,40 +67,45 @@ Watch_Code/
 Open the `TTGo_FW/` folder in VS Code with PlatformIO. The folder should contain a platformio.ini file. Connect the T-Watch via USB and click the arrow icon in the PlatformIO toolbar on the bottom of the window, or run:
 `pio run`
 
-### 2. Pair Bluetooth
-On the Raspberry Pi, pair with the watch:
-```bash
-bluetoothctl
-> scan on
-> pair 44:17:93:88:D1:CA
-> trust 44:17:93:88:D1:CA
-> exit
-```
 
-### 3. Start the Hub and Web UI
+### 2. Start the Hub and Web UI
+Within the project folder run:
+```bash
+source venv/bin/activate
+```
 Navigate to the `RPi/` folder and run:
 ```bash
 python3 main.py
 ```
 Open a browser and navigate to `http://localhost:5000`.
 
+### 3. Pair Bluetooth
+After you run `main.py`, the script attempts to connect to the Bluetooth device. The device MAC address is hard-coded in `bt.py`.
+If this is the first time pairing the device, you may need to run:
+```bash
+bluetoothctl
+> scan on
+> trust 44:17:93:88:D1:CA
+> exit
+```
+
 ### 4. Set User Profile
- In the landing page, click **Settings**, enter the hiker's weight (kg) and height (cm), and click Save. If the watch is already connected via Bluetooth, the information is pushed to the watch automatically.
+In the landing page, click **Settings**, enter the hiker's weight (kg) and height (cm), and click Save. If the watch is already connected via Bluetooth, the information is pushed to the watch automatically.
 
 
 ## Usage
 
 ### Watch Operation
-- **Idle screen**: shows current time, battery, Bluetooth and GPS status
+- **Idle screen**: shows current time, date, battery, Bluetooth and GPS status
 - **Start a session**: press the physical side button
 - **Hike screen**: displays live steps, distance, duration and calories
 - **End a session**: press the button again and data is saved and synced if Bluetooth is connected
 
 ### Web Interface
-- **Home**: Overview of all synced sessions and BT connection status, watch on the side shows all past sessions combined distance
-- **Sessions**: Full session list with steps, distance, duration and kcal as well as a map of the tracked route
+- **Home**: User height and weight settings, BT connection status, past sessions combined distance
+- **Sessions**: Full session list with date, starting time, steps, distance, duration and kcal as well as a map of the tracked route
 - **History**: Chronological session history
-- **Settings**: Update user weight and height
+
 
 
 ## Notes
