@@ -4,3 +4,4 @@
 
 void logGps();
 void saveGpsPointsToFile();
+void updateTime();

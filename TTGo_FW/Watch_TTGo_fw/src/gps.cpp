@@ -69,3 +69,26 @@ void saveGpsPointsToFile() {
 
     file.close();
 }
+
+void updateTime() {
+    if (!gps) 
+        return;
+
+    if (gps->date.isValid() && gps->time.isValid()) {
+        int year   = gps->date.year();
+        int month  = gps->date.month();
+        int day    = gps->date.day();
+        int hour   = gps->time.hour(); 
+        int minute = gps->time.minute();
+        int second = gps->time.second();
+
+        if (hour >= 24) {
+            hour -= 24;
+        }
+
+        rtc->setDateTime(year, month, day, hour, minute, second);
+
+        Serial.printf("RTC synced from GPS: %04d-%02d-%02d %02d:%02d:%02d\n",
+                    year, month, day, hour, minute, second);
+    }
+}       

@@ -41,6 +41,7 @@ String sessionEndTime = "";
 unsigned long sessionStartMs = 0;
 unsigned long sessionDurationMs = 0;
 String durationStr = "";
+unsigned long lastRtcSync = 0;
 
 // calorie estimation variables
 const float MET = 6;
@@ -177,15 +178,34 @@ void setup() {
             LittleFS.exists("/distance.txt") &&
             LittleFS.exists("/datetime.txt");
 
-    rtc->setDateTime(
-        String(__DATE__).substring(7, 11).toInt(),   
-        monthStrToNumber(String(__DATE__).substring(0, 3)),
-        String(__DATE__).substring(4, 6).toInt(),   
-        String(__TIME__).substring(0, 2).toInt(),   
-        String(__TIME__).substring(3, 5).toInt(),
-        String(__TIME__).substring(6, 8).toInt()   
-    );
 
+    int hour = String(__TIME__).substring(0, 2).toInt();
+    int minute = String(__TIME__).substring(3, 5).toInt();
+    int second = String(__TIME__).substring(6, 8).toInt() + 40;
+
+    if (second >= 60) {
+        minute += second / 60;
+        second = second % 60;
+    }
+
+    if (minute >= 60) {
+        hour += minute / 60;
+        minute = minute % 60;
+    }
+
+    if (hour >= 24) {
+        hour = hour % 24;
+    }
+
+    rtc->setDateTime(
+        String(__DATE__).substring(7, 11).toInt(),
+        monthStrToNumber(String(__DATE__).substring(0, 3)),
+        String(__DATE__).substring(4, 6).toInt(),
+        hour,
+        minute,
+        second
+    );
+    
     if (!gps) { Serial.println("GPS: null ptr"); }
     if (!gps->location.isValid()) { Serial.println("GPS: location invalid"); }
     if (!gps->altitude.isValid()) { Serial.println("GPS: altitude invalid"); }
@@ -212,6 +232,7 @@ void loop() {
         Serial.println(__TIME__);
         Serial.print("RTC after set = ");
         Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+
         /* Initial stage */
         lv_scr_load(scr_idle);
         lv_label_set_text(lbl_idle_bigtime, rtc->formatDateTime(PCF_TIMEFORMAT_HM));
@@ -228,7 +249,7 @@ void loop() {
         lv_task_handler();
         
       
-        //Bluetooth discovery
+        // Bluetooth discovery
         while (1) 
         {
             lv_task_handler();
@@ -267,35 +288,12 @@ void loop() {
                 }
             }
 
-            static bool rtcSyncedFromGps = false;
-            static unsigned long lastRtcSync = 0;
-
-            if (gps &&
-                gps->date.isValid() &&
-                gps->time.isValid() &&
-                gps->date.isUpdated() &&
-                gps->time.isUpdated() &&
-                gps->location.isValid() &&
-                gps->location.age() < 10000)
-            {
-                int year   = gps->date.year();
-                int month  = gps->date.month();
-                int day    = gps->date.day();
-                int hour   = gps->time.hour() + 1; 
-                int minute = gps->time.minute();
-                int second = gps->time.second();
-
-                if (hour >= 24) hour -= 24;
-
-                if (!rtcSyncedFromGps || millis() - lastRtcSync > 60000) {
-                    rtc->setDateTime(year, month, day, hour, minute, second);
-                    lastRtcSync = millis();
-                    rtcSyncedFromGps = true;
-
-                    Serial.printf("RTC synced from GPS: %04d-%02d-%02d %02d:%02d:%02d\n",
-                                year, month, day, hour, minute, second);
-                }
+            // RTC sync     
+            if (millis() - lastRtcSync > 60000) {
+                updateTime();
+                lastRtcSync = millis();    
             }
+
             if (state == 2) {
                 break;
             }
@@ -357,6 +355,12 @@ void loop() {
          /* Hiking session ongoing */
 
         lv_scr_load(scr_hike);
+
+        // RTC sync     
+        if (millis() - lastRtcSync > 60000) {
+            updateTime();
+            lastRtcSync = millis();    
+        }
 
         readBattery();
         lv_label_set_text(lbl_hike_batt_icon, battIcon());

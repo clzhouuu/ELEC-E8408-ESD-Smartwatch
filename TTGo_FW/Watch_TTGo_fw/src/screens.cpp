@@ -135,7 +135,7 @@ void setGpsIconColor(lv_obj_t *icon) {
     if (gpsFix) {
         gpsColor = LV_COLOR_MAKE(0x00, 0xAA, 0x00);
     } else {  
-        gpsColor = LV_COLOR_MAKE(0x00, 0xAA, 0x00);
+        gpsColor = LV_COLOR_MAKE(0xAA, 0xAA, 0xAA);
     }    
     lv_obj_set_style_local_text_color(icon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, gpsColor);
 }
