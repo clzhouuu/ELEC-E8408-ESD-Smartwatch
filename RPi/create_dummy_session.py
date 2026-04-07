@@ -20,7 +20,7 @@ steps = 15840
 kcal = 684
 duration = "02:22:09" # seconds = 2h 22m
 start_time = "10:18:36"   # HHMMSS
-date = "2026-03-26"   # YYYYMMDD
+date = "26-03-2026"   # YYYYMMDD
 
 # IMPORTANT:
 # Change this constructor line if your hike.py uses a different argument order/name.
