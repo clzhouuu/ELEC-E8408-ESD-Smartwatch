@@ -3,10 +3,11 @@
 ## Overview
 **HUIPPU** is a smartwatch system that tracks hiking sessions using sensor data and syncs them wirelessly to a Raspberry Pi hub for review via a web UI.
 
-- Real-time step, distance, and calorie tracking via BMA423 accelerometer
+- Real-time step, distance, and calorie tracking based on BMA423 accelerometer
 - GPS route logging using TinyGPS++
 - Bluetooth session sync between watch and Raspberry Pi
-- Web UI for session history and user profile management
+- Memory handling on SQL dabase
+- Web UI for session history visual and user profile management
 
 ## Repository structure
 ```
@@ -24,6 +25,11 @@ Watch_Code/
 │
 └── TTGo_FW/                         # Watch
     ├── src/
+    │   ├── icons/
+    │   │   ├── steps.c              # Steps icon
+    │   │   ├── image.c                  # Background image asset
+    │   │   ├── fire.c                   # Calorie icon
+    │   │   └── person.c                 # Distance icon
     │   ├── main.cpp                 # Main file
     │   ├── config.h                 # Config
     │   ├── globals.h                # Global variable
@@ -32,11 +38,7 @@ Watch_Code/
     │   ├── gps.cpp / gps.h          # GPS and file save
     │   ├── power.cpp / power.h      # Battery, sleep, wake, shutdown, sensor init
     │   ├── saveFile.cpp / .h        # Session file read/write
-    │   ├── utils.cpp / utils.h      # LittleFS file system utilities
-    │   ├── image.c                  # Background image asset
-    │   ├── fire.c                   # Calorie icon
-    │   ├── steps.c                  # Steps icon
-    │   └── person.c                 # Distance icon
+    │   └──  utils.cpp / utils.h      # LittleFS file system utilities
     └── platformio.ini               # PlatformIO build configuration
 ```
 
@@ -96,11 +98,10 @@ In the landing page, click **Settings**, enter the hiker's weight (kg) and heigh
 ## Usage
 
 ### Watch Operation
-- **Idle screen**: shows current time, date, battery, Bluetooth and GPS status
-- **Start a session**: press the physical side button
-- **Hike screen**: displays live steps, distance, duration and calories
-- **End a session**: press the button again and data is saved and synced if Bluetooth is connected
-
+- **Idle screen**: Shows current time, date, battery, Bluetooth and GPS status
+- **Start a session**: Press the start a hike button on the screen
+- **Hike screen**: Displays live steps, distance, duration and burned calories
+- **End a session**: Press the end hike button to terminate a session and sync
 ### Web Interface
 - **Home**: User height and weight settings, BT connection status, past sessions combined distance
 - **Sessions**: Full session list with date, starting time, steps, distance, duration and kcal as well as a map of the tracked route
@@ -109,6 +110,7 @@ In the landing page, click **Settings**, enter the hiker's weight (kg) and heigh
 
 
 ## Notes
+- If the watch is not Bluetooth connected, and a hike is ended, it will save the session on the local memory.
 - Only one session can be stored locally on the watch at a time. Starting a new session without syncing will overwrite the previous one.
 - GPS fix can take up to 2 minutes in open sky.
 - Calorie estimation uses MET = 6.
