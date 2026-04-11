@@ -93,7 +93,7 @@ bluetoothctl
 ```
 
 ### 4. Set User Profile
-In the landing page, click **Settings**, enter the hiker's weight (kg) and height (cm), and click Save. If the watch is already connected via Bluetooth, the information is pushed to the watch automatically.
+In the landing page, click **Settings**, enter the hiker (user's) weight (kg) and height (cm), and click Save. If the watch is already connected via Bluetooth, the information is pushed to the watch automatically.
 
 
 ## Usage
@@ -106,7 +106,7 @@ In the landing page, click **Settings**, enter the hiker's weight (kg) and heigh
 ### Web Interface
 - **Home**: User height and weight settings, BT connection status, past sessions combined distance
 - **Sessions**: Full session list with date, starting time, steps, distance, duration and kcal as well as a map of the tracked route
-- **History**: Chronological session history
+- **History**: Session history in chronological order
 
 
 
