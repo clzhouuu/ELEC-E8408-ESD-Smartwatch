@@ -21,6 +21,7 @@ Watch_Code/
 │   ├── outbound_package.py          # Outbound data package
 │   ├── receiver.py                  # Bluetooth receiver
 │   ├── wserver.py                   # Flask server
+│   ├── create_dummy_session.py      # Creates a sample session for testing
 │   └── requirements.txt             # Python dependencies
 │
 └── TTGo_FW/                         # Watch
